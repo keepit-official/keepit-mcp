@@ -1,0 +1,104 @@
+{
+  "manifest_version": "0.3",
+  "name": "keepit-mcp-server",
+  "display_name": "Keepit MCP Server",
+  "version": "1.0.0",
+  "description": "A simple MCP extension (MCPB) that brings Keepit's enterprise backup capabilities directly into your workspace. Our vision is to enable comprehensive management of your entire backup and restore lifecycle - across all Keepit-supported workloads including Microsoft 365, SharePoint, Azure DevOps, Salesforce, and beyond.",
+  "long_description": "**Keepit Extension**\nThis extension provides a Model Context Protocol (MCP) server for interacting with the Keepit REST API.\n\n**What's Available Now (Read-Only)**\n* **View Backup Jobs**: Check status, history, and details of backup operations across all workloads\n* **Browse Snapshots**: Explore available backup snapshots and their contents\n* **Compare Snapshots**: See differences between backup versions\n* **Monitor Connectors**: View health status and configuration of backup connectors for each service\n* **Check Coverage**: Review what resources are currently protected\n\n**What's Coming Later**\n* **Backup Management**: Schedule and configure backup jobs\n* **Restore Operations**: Perform restores with granular control over what gets restored\n* **Resource Management**: Track usage, compliance, and billing\n* **Anomaly Detection**: Get alerts on backup issues and irregularities\n* **Full Account Management**: Comprehensive control over accounts and products\n\n**Configuration**\nThe extension requires Keepit API credentials which can be configured through user settings.",
+  "author": {
+    "name": "Keepit A/S",
+    "url": "https://www.keepit.com"
+  },
+  "keywords": ["backup", "keepit", "microsoft-365", "sharepoint", "salesforce", "azure-devops"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.off.keepit.com/development/keepit-mcp.git"
+  },
+  "homepage": "https://www.keepit.com",
+  "icon": "public/keepit_logo.png",
+  "server": {
+    "type": "node",
+    "entry_point": "build/main.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/build/main.js"
+      ],
+      "env": {
+        "NODE_ENV": "production",
+        "KEEPIT_USER": "${user_config.keepit_username}",
+        "KEEPIT_PASS": "${user_config.keepit_password}",
+        "KEEPIT_ENV": "${user_config.keepit_datacenter}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "get_cloud_connectors",
+      "description": "Get a list of cloud connectors in your account"
+    },
+    {
+      "name": "get_connector_health",
+      "description": "Get the health status of a connector. You can provide either the connector GUID or the connector name (full or partial). "
+    },
+    {
+      "name": "get_active_jobs",
+      "description": "Get a list of active jobs, including their statuses and creation dates"
+    },
+    {
+      "name": "get_job_history",
+      "description": "Get a list of backup and/or restore jobs for a connector"
+    },
+    {
+      "name": "get_audit_log_history",
+      "description": "Get a list of audit log events for a specified period"
+    },
+    {
+      "name": "get_my_account_info",
+      "description": "Get comprehensive account information, including status, creation date, product assignment, and service details"
+    },
+    {
+      "name": "get_latest_snapshot",
+      "description": "Get the timestamp of the most recent completed snapshot for a connector"
+    },
+    {
+      "name": "get_snapshot_range",
+      "description": "Get a list of snapshots for a connector within a given time range"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "backup_status",
+      "description": "Check the current backup status and any recent job failures",
+      "text": "Please show me the current backup status and any recent job failures. Use the get_active_jobs and get_job_history tools to provide a comprehensive overview."
+    },
+    {
+      "name": "connector_health",
+      "description": "Check the health status of all backup connectors and report any issues",
+      "text": "Check the health status of all my backup connectors using get_cloud_connectors and get_connector_health tools. Report any issues or anomalies found."
+    }
+  ],
+  "user_config": {
+    "keepit_username": {
+      "type": "string",
+      "title": "Keepit username",
+      "description": "Your Keepit username",
+      "required": true
+    },
+    "keepit_password": {
+      "type": "string",
+      "title": "Keepit password",
+      "description": "Your Keepit password",
+      "required": true,
+      "sensitive": true
+    },
+    "keepit_datacenter": {
+      "type": "string",
+      "title": "Region",
+      "description": "Keepit datacenter region (dk-co, us-dc, eu-dc, uk-ld, ca-tr, au-sy, de-fr, ch-zh)",
+      "required": true,
+      "default": "dk-co"
+    }
+  }
+}

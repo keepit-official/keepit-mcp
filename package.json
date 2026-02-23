@@ -1,0 +1,46 @@
+{
+  "name": "keepit-mcp",
+  "version": "0.1.0",
+  "description": "Keepit-MCP is a Model Context Protocol (MCP) server for the Keepit REST API.",
+  "license": "MIT",
+  "author": "Keepit",
+  "homepage": "https://www.keepit.com",
+  "main": "./build/main.js",
+  "type": "module",
+  "keywords": [
+    "mcp",
+    "Keepit",
+    "backup",
+    "model",
+    "context",
+    "protocol"
+  ],
+  "scripts": {
+    "start": "node scripts/dev.js",
+    "generate-mcpb": "node scripts/generate-mcpb.js",
+    "prod": "tsc && node build/main.js",
+    "lint": "eslint --fix src"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.26.0",
+    "dotenv": "16.5.0",
+    "fast-xml-parser": "5.3.6",
+    "js-base64": "3.7.5"
+  },
+  "devDependencies": {
+    "@anthropic-ai/mcpb": "2.1.2",
+    "@eslint/js": "9.39.2",
+    "@stylistic/eslint-plugin": "5.6.1",
+    "@types/node": "22.13.10",
+    "copy-files-from-to": "3.12.1",
+    "eslint": "9.39.2",
+    "eslint-plugin-unicorn": "62.0.0",
+    "express": "5.1.0",
+    "globals": "16.3.0",
+    "jiti": "2.5.1",
+    "nodemon": "3.1.10",
+    "rimraf": "6.0.1",
+    "typescript": "5.8.2",
+    "typescript-eslint": "8.56.0"
+  }
+}

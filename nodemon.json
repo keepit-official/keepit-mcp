@@ -1,0 +1,12 @@
+{
+    "delay": 2000, 
+    "watch": ["build"], 
+    "ext": "js,json",
+    "ignore": ["node_modules", "src", "*.test.js", ".idea", ".vscode", "*.log"],
+    "events": {
+        "crash": "echo [nodemon] App crashed! Waiting for changes...",
+        "restart": "npm run lint"
+    },
+    "verbose": false,
+    "__comment": "change verbose to true to track which files trigger proxy restart"
+}

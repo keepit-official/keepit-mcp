@@ -1,0 +1,32 @@
+{
+    "copyFiles": [
+        {
+            "from": "build/**/*",
+            "to": "export/build"
+        },
+        {
+            "from": "public/**/*",
+            "to": "export/public"
+        },
+        {
+            "from": "manifest.json",
+            "to": "export/manifest.json"
+        },
+        {
+            "from": "package.json",
+            "to": "export/package.json"
+        },
+        {
+            "from": "PROMPTS.md",
+            "to": "export/PROMPTS.md"
+        },
+        {
+            "from": "README.md",
+            "to": "export/README.md"
+        },
+        {
+            "from": "SECURITY.md",
+            "to": "export/SECURITY.md"
+        }
+    ]
+}
