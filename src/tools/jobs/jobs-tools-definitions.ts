@@ -76,6 +76,15 @@ const GET_ACTIVE_JOBS_TOOL = {
             guid: {
                 type: 'string',
                 description: 'GUID of the connector whose job history you want'
+            },
+            account_id: {
+                type: 'string',
+                description: 'Optional account ID for scoped connector resolution'
+            },
+            scope: {
+                type: 'string',
+                enum: ['account', 'children', 'leaf', 'managed', 'all'],
+                description: 'Optional account scope for connector resolution'
             }
         },
         required: ['guid'],
@@ -94,10 +103,26 @@ const GET_JOB_HISTORY_TOOL = {
                 type: 'string',
                 description: 'GUID of the connector whose job history you want'
             },
+            account_id: {
+                type: 'string',
+                description: 'Optional account ID for scoped connector resolution'
+            },
+            scope: {
+                type: 'string',
+                enum: ['account', 'children', 'leaf', 'managed', 'all'],
+                description: 'Optional account scope for connector resolution'
+            },
             duration: {
                 type: 'string',
-                description: 'Duration (in ISO 8601 format) to look back for job history. (e.g., "P7D" for 7 days, "P1M" for 1 month)',
-                default: 'P7D'
+                description: 'How far back to look, as an ISO 8601 duration (maximum 90 days). Examples: "P7D" = 7 days, "P30D" = 30 days. Cannot be used together with startTime/endTime.'
+            },
+            startTime: {
+                type: 'string',
+                description: 'Start of the date range as an ISO 8601 timestamp (e.g. "2025-07-01T00:00:00Z"). Cannot be used together with duration. The range cannot exceed 90 days.'
+            },
+            endTime: {
+                type: 'string',
+                description: 'End of the date range as an ISO 8601 timestamp (e.g. "2025-09-30T23:59:59Z"). Defaults to now if omitted. Cannot be used together with duration.'
             }
         },
         required: ['guid'],

@@ -11,10 +11,10 @@ type RangeToolResponse = Record<'snapshots', ISnapshotRange[]>;
 export const SNAPSHOT_TOOLS_HANDLER: ToolHandlers = {
     get_latest_snapshot: async (request: CallToolRequest, authConfig: IAuthConfig) => {
         try {
-            const { guid } = getValidatedLatestSnapshotArgs(request.params);
+            const toolArguments = getValidatedLatestSnapshotArgs(request.params);
 
             const { result: snapshot, success, messages } = await getLatestSnapshotByGuid(
-                guid,
+                toolArguments,
                 authConfig
             );
 
@@ -22,7 +22,7 @@ export const SNAPSHOT_TOOLS_HANDLER: ToolHandlers = {
                 tool: 'get_latest_snapshot',
                 success,
                 messages,
-                guid
+                guid: toolArguments.guid
             };
 
             return createToolResponse<ConnectorsToolResponse>(

@@ -84,7 +84,7 @@ export const subtractPeriod: TGetPeriodDate = (period, startDate = new Date()) =
         day: startDate.getDate(),
         dayOffset: 0,
         hour: startDate.getHours(),
-        minut: startDate.getMinutes(),
+        minutes: startDate.getMinutes(),
         second: startDate.getSeconds()
     };
 
@@ -109,7 +109,7 @@ export const subtractPeriod: TGetPeriodDate = (period, startDate = new Date()) =
         parsedStartDate.month - months,
         (parsedStartDate.dayOffset || parsedStartDate.day) - days - weeks * 7,
         parsedStartDate.hour - hours,
-        parsedStartDate.minut - minutes,
+        parsedStartDate.minutes - minutes,
         parsedStartDate.second - seconds
     );
 };

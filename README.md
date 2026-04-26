@@ -1,20 +1,19 @@
-# Keepit MCP
+# Keepit MSP MCP
 
 ## About
-Keepit MCP is Keepit's Model Context Protocol (MCP) server for use with Claude Desktop or other applications that support
-local stdio-based MCP servers. Keepit MCP's tools help you monitor, manage, and secure your Keepit estate using AI. 
+Keepit MSP MCP is Keepit's Model Context Protocol (MCP) server for use with Claude Desktop or other applications that support
+local stdio-based MCP servers. Keepit MSP MCP's tools help you monitor, manage, and secure your Keepit estate using AI. 
 
-Keepit MCP provides integration with **Keepit** for backup and data protection services
+Keepit MSP MCP provides integration with **Keepit** for backup and data protection services
 
-
-Keepit MCP allows you to use natural language — [Claude Desktop](https://support.anthropic.com/en/articles/10065433-installing-claude-for-desktop) or any MCP client — to interact with your Keepit account through the Keepit REST API.
+Keepit MSP MCP allows you to use natural language — [Claude Desktop](https://support.anthropic.com/en/articles/10065433-installing-claude-for-desktop) or any MCP client — to interact with your Keepit account through the Keepit REST API.
 
 Example queries:
 - `Do I have any unhealthy connectors?`
 - `Show me failed audit logs with duration PT6H`
 - `Get all users in my tenant` (with Lokka integration)
 
-To get a sense of what's possible with Keepit MCP, we've provided a comprehensive set of example prompts in [PROMPTS.md](PROMPTS.md).
+To get a sense of what's possible with Keepit MSP MCP, we've provided a comprehensive set of example prompts in [PROMPTS.md](PROMPTS.md).
 
 ## What is MCP?
 
@@ -50,7 +49,7 @@ The tool definitions specify the input schema for each individual tool, and the 
 structured results or simple items like a string or GUID.
 
 ## Installation
-To use the **Keepit MCP server** for either production or development, you need to install the repository on your local machine.  
+To use the **Keepit MSP MCP server** for either production or development, you need to install the repository on your local machine.  
 
 Follow the steps below to set up the project environment:
 1. **Install the required software (if not already installed):**
@@ -64,11 +63,11 @@ Follow the steps below to set up the project environment:
 
 2. **Clone the repository:**
    ```bash
-   git clone https://github.com/keepit-official/keepit-mcp.git
+   git clone https://github.com/keepit-official/keepit-msp-mcp.git
    
 3. After cloning the repository, open the project folder:
     ```bash
-    cd keepit-mcp
+    cd keepit-msp-mcp
 
 4. Install dependencies using the command:
      ```bash
@@ -79,37 +78,44 @@ This project can be used for:
 
 1. Сreating MCPB package
 2. Installing MCPB package into Claude
-3. Run Keepit MCP server with MCP clients that support `stdio` transport
-4. Developing the Keepit MCP server
+3. Run Keepit MSP MCP server with MCP clients that support `stdio` transport
+4. Developing the Keepit MSP MCP server
 
 **Note:** Before proceeding, make sure the project is properly installed (see the [Installation](#installation) section).
 
 ### Create MCPB package
 - Open the project folder:
   ```bash
-  cd keepit-mcp
+  cd keepit-msp-mcp
 
 - Run the build command:
   ```bash
   npm run generate-mcpb
 
-- After a successful build, the `keepit-mcp.mcpb` file will be generated.
+- After a successful build, the `keepit-msp-mcp.mcpb` file will be generated.
 
 ### Installing MCPB package into Claude
 - Download and install the desktop version of Claude [Claude Desktop Download](https://claude.ai/download) (if not already installed)
 - In the Claude app, go to: `Settings > Extensions > Advanced settings`
 - Click `Install Extension...`
-- In the popup, select the previously generated MCPB package (`keepit-mcp.mcpb`) and click Install.
+- In the popup, select the previously generated MCPB package (`keepit-msp-mcp.mcpb`) and click Install.
 - Upon installation, you will be prompted with a popup requiring your Keepit account credentials: login, password, and the region where your account is hosted.
     - **Note:**  We highly recommend using a secondary token (instead of your main login/password) for authentication. You can create one in the Keepit Web App: (`User info page > Security tab > Secondary tokens`)
 - Enable the newly installed extension.
 
-### Run the Keepit MCP Server in Production Mode: 
+### Run the Keepit MSP MCP Server in Production Mode: 
   - We highly recommend that you read our [security recommendations](./SECURITY.md).
 
-### Developing the Keepit MCP server
+### Healthcheck
+- Run the startup validation and auth self-check:
+  ```bash
+  npm run healthcheck
+  ```
+- This verifies `KEEPIT_USER`, `KEEPIT_PASS`, `KEEPIT_ENV`, and confirms the server can resolve the authenticated user and role.
 
-Alongside the Keepit MCP server, we have a dedicated **Proxy server**. This server acts as a wrapper around the MCP and allows us to **test new or existing MCP tools locally** without the need to repeatedly create MCPB packages.
+### Developing the Keepit MSP MCP server
+
+Alongside the Keepit MSP MCP server, we have a dedicated **Proxy server**. This server acts as a wrapper around the MCP and allows us to **test new or existing MCP tools locally** without the need to repeatedly create MCPB packages.
 
 The Proxy server is an **HTTP server** that listens for incoming requests (e.g., from Postman) and forwards them to the MCP server.  
 Responses from the MCP server are then sent back through the Proxy to the HTTP client.
@@ -119,7 +125,7 @@ This setup is always available during development and enables us to **debug and 
 ![KEEPIT_MCP](public/KEEPIT_PROXY_AND_MCP.png)
 
 
-#### Run the Keepit MCP server locally in development mode:
+#### Run the Keepit MSP MCP server locally in development mode:
   - In the project root, create an `.env` file to store your configuration:
     ```bash
     nano .env or vim .env
@@ -129,15 +135,17 @@ This setup is always available during development and enables us to **debug and 
     KEEPIT_USER=OgGvCVqJDkPVql=?75AXDIBM
     KEEPIT_PASS=55Z,oS0yn8n.esNdrjvZgfEE
     KEEPIT_ENV=ws-test
+    KEEPIT_DISABLE_ANALYTICS=0
     LOCAL_PORT=5000
     ```
     - **Note:**  The LOCAL_PORT field is optional. If not specified, the server will run on http://127.0.0.1:3000
+    - **Note:** `KEEPIT_DISABLE_ANALYTICS` is optional. Telemetry is enabled by default. Set it to `1`, `true`, or `yes` to disable it.
    
   - Run the following command to start the development server:
     ```bash
     npm start
 
-#### Test the Keepit MCP server locally in development mode, using any API client to send requests:
+#### Test the Keepit MSP MCP server locally in development mode, using any API client to send requests:
   - Open the API client.
   - Use the following request params:
     ```bash
@@ -174,7 +182,7 @@ Postman provides native support for MCP servers, allowing you to test the Keepit
 
 **Steps to test:**
 
-1. **Start the Keepit MCP server:**
+1. **Start the Keepit MSP MCP server:**
    ```bash
    npm start
    ```
@@ -188,7 +196,7 @@ Postman provides native support for MCP servers, allowing you to test the Keepit
    - In the MCP request panel, configure the server settings:
      - **Server type**: stdio
      - **Command**: `node` (or your Node.js path)
-     - **Arguments**: `<path-to-keepit-mcp>/build/main.js`
+     - **Arguments**: `<path-to-keepit-msp-mcp>/build/main.js`
      - **Environment variables**: Add your environment variables (KEEPIT_USER, KEEPIT_PASS, KEEPIT_ENV)
 
 4. **Send MCP tool requests:**
@@ -209,7 +217,7 @@ The MCP Inspector is a built-in debugging tool that allows you to test and inspe
    npm run build
    ```
 
-2. **Run MCP Inspector with your Keepit MCP server:**
+2. **Run MCP Inspector with your Keepit MSP MCP server:**
    ```bash
    npx @modelcontextprotocol/inspector build/main.js
    ```
@@ -221,13 +229,23 @@ The MCP Inspector is a built-in debugging tool that allows you to test and inspe
 
 For more information about MCP Inspector, see the [official MCP documentation](https://modelcontextprotocol.io/docs/tools/inspector).
 
+## Operational Notes
+
+- `KEEPIT_DISABLE_ANALYTICS` is optional and defaults to telemetry enabled. Set `KEEPIT_DISABLE_ANALYTICS=1` to opt out.
+- For `get_audit_log_history`, each request returns at most `500` records, and `limit` defaults to `500`.
+- For single-account audit queries, when more audit history is available the response returns `pagination.nextOffset`. Repeat the same query with that `offset` to continue with the next window.
+- Broad multi-account audit queries do not support continuation. If a broad query is capped or truncated, narrow the query to one account to retrieve additional records reliably.
+- When a response is capped, the tool also returns an explicit message explaining whether the next step is `offset` continuation or narrowing the query scope.
+- The server retries transient failures for safe `GET`/`HEAD` requests and for explicitly marked safe read-only `PUT` queries, with short backoff, and still uses a request timeout to avoid hanging indefinitely.
+- The local dev proxy exposes `GET /health` on `127.0.0.1` and reports whether the proxied MCP child has completed initialization.
+
 ## Tool Development
 
 This section describes how tools are implemented in Keepit MCP, providing a pattern for developers to follow when creating new tools.
 
 ### Architecture Overview
 
-Keepit MCP uses a modular, composable tool architecture with three distinct layers for each tool category:
+Keepit MSP MCP uses a modular, composable tool architecture with three distinct layers for each tool category:
 
 ```
 ┌─────────────────────────────────────────┐

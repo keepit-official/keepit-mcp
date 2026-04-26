@@ -1,4 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { logger } from '../logger/logger.js';
 import { getToolConfig, getToolCallback } from '../helpers/mcp.helper.js';
 import { toolsDefinitions, toolsRequiredAcl } from '../tools/index.js';
 import { setupAuthConfig } from '../helpers/auth-config.helper.js';
@@ -19,10 +20,10 @@ export class CustomMcpServer extends McpServer {
             this.registerTools();
 
             this.isInitialized = true;
-            console.error('Initialized successfully');
+            logger.info('Initialized successfully');
         } catch (error) {
-            console.error('Initialization failed:', error);
-            throw new Error(`Failed to initialize MCP server: ${error}`);
+            logger.error('Initialization failed:', error);
+            throw new Error(`Failed to initialize MCP server: ${(error as Error).message}`);
         }
     }
 
@@ -32,15 +33,17 @@ export class CustomMcpServer extends McpServer {
         }
 
         if (!toolsDefinitions.length) {
-            console.error('No tools to register.');
-            return;
+            throw new Error('No tools are defined for registration.');
         }
 
-        const allowedTools = getAllowedTools(toolsDefinitions, toolsRequiredAcl);
+        const allowedTools = getAllowedTools(
+            toolsDefinitions,
+            toolsRequiredAcl,
+            this.authConfig.userAcl.aclObject
+        );
 
         if (!allowedTools.length) {
-            console.error('No allowed tools.');
-            return;
+            throw new Error('No allowed tools were resolved from the current ACL.');
         }
 
         for (const { name, description, inputSchema, outputSchema } of allowedTools) {

@@ -21,7 +21,27 @@ export const getTokens = <
     };
 
     const applyDataCallback = (response: string) => {
-        return normalizeArrayResponse(Parser.parse(response).tokens.token) as R[];
+        const parsed = Parser.parse(response);
+        if (!parsed?.tokens) {
+            throw new Error('Unexpected response from tokens endpoint — could not resolve user role. Check your credentials and region.');
+        }
+        return normalizeArrayResponse(parsed.tokens.token) as R[];
+    };
+
+    return { requestConfig, applyDataCallback };
+};
+
+export const getTokenByGuid = (userId: string, tokenGuid: string) => {
+    const requestConfig: IMakeRequestBaseParams = {
+        url: `/users/${userId}/tokens/${tokenGuid}`,
+        method: 'GET',
+        headers: { Accept: 'application/xml' }
+    };
+
+    const applyDataCallback = (response: string) => {
+        const parsed = Parser.parse(response);
+        const tokens = normalizeArrayResponse(parsed?.tokens?.token);
+        return tokens[0] || null;
     };
 
     return { requestConfig, applyDataCallback };

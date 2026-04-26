@@ -12,15 +12,17 @@ const Parser = new XMLParser(xmlParseOptions);
 
 function maskSensitiveToken(token: string): string {
     if (!token || token === 'Unknown') return token;
+    // Guard at 8: we take 4 chars from each end; a token of 9+ chars ensures the prefix and
+    // suffix never overlap. Anything <= 8 is fully replaced to avoid leaking the full value.
     if (token.length <= 8) return '***';
     return token.substring(0, 4) + '***' + token.substring(token.length - 4);
 }
 
 export const getAuditLogHistorySettings = (body: IAuditLogBody, paginationParams?: ToolPaginationParams) => {
-    const DEFAULT_LIMIT = 50;
+    const DEFAULT_LIMIT = 500;
 
-    const limit = paginationParams?.limit || DEFAULT_LIMIT;
-    const offset = paginationParams?.offset || 0;
+    const limit = paginationParams?.limit ?? DEFAULT_LIMIT;
+    const offset = paginationParams?.offset ?? 0;
 
     const url = `/audit/filter/pretty?limit=${limit}&offset=${offset}`;
 
@@ -29,6 +31,7 @@ export const getAuditLogHistorySettings = (body: IAuditLogBody, paginationParams
         method: 'PUT',
         headers: getHeaders('v4'),
         body: generateXmlBody(body, 'filter'),
+        retrySafe: true,
         includeHeaders: true
     };
 
@@ -36,7 +39,8 @@ export const getAuditLogHistorySettings = (body: IAuditLogBody, paginationParams
         const jsonData = Parser.parse(response.data);
 
         const nextOffsetHeader = response.headers.get('next-offset');
-        const nextOffset = nextOffsetHeader ? parseInt(nextOffsetHeader, 10) : undefined;
+        const parsedOffset = nextOffsetHeader ? parseInt(nextOffsetHeader, 10) : NaN;
+        const nextOffset = Number.isFinite(parsedOffset) ? parsedOffset : undefined;
 
         const callbackResult: ToolResult<AuditLogToolResponse> = {
             result: {
@@ -67,6 +71,7 @@ export const getAuditLogHistorySettings = (body: IAuditLogBody, paginationParams
                 if (record.account !== undefined) {
                     acc.push({
                         ...record,
+                        raw_token: record.token,
                         token: maskSensitiveToken(record.token),
                         'client-ip': sanitizeIPAddress(record['client-ip'])
                     });

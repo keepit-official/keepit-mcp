@@ -10,10 +10,10 @@ type JobsToolResponse = Record<'jobs', IJob[]>;
 export const JOBS_TOOLS_HANDLER: ToolHandlers = {
     get_active_jobs: async (request: CallToolRequest, authConfig: IAuthConfig) => {
         try {
-            const { guid } = getValidatedJobArguments(request.params);
+            const toolArguments = getValidatedJobArguments(request.params);
 
             const { success, messages, result: jobs } = await getJobsList(
-                guid,
+                toolArguments,
                 authConfig
             );
 

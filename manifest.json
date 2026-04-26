@@ -1,19 +1,26 @@
 {
   "manifest_version": "0.3",
-  "name": "keepit-mcp-server",
-  "display_name": "Keepit MCP Server",
-  "version": "1.0.0",
-  "description": "A simple MCP extension (MCPB) that brings Keepit's enterprise backup capabilities directly into your workspace. Our vision is to enable comprehensive management of your entire backup and restore lifecycle - across all Keepit-supported workloads including Microsoft 365, SharePoint, Azure DevOps, Salesforce, and beyond.",
-  "long_description": "**Keepit Extension**\nThis extension provides a Model Context Protocol (MCP) server for interacting with the Keepit REST API.\n\n**What's Available Now (Read-Only)**\n* **View Backup Jobs**: Check status, history, and details of backup operations across all workloads\n* **Browse Snapshots**: Explore available backup snapshots and their contents\n* **Compare Snapshots**: See differences between backup versions\n* **Monitor Connectors**: View health status and configuration of backup connectors for each service\n* **Check Coverage**: Review what resources are currently protected\n\n**What's Coming Later**\n* **Backup Management**: Schedule and configure backup jobs\n* **Restore Operations**: Perform restores with granular control over what gets restored\n* **Resource Management**: Track usage, compliance, and billing\n* **Anomaly Detection**: Get alerts on backup issues and irregularities\n* **Full Account Management**: Comprehensive control over accounts and products\n\n**Configuration**\nThe extension requires Keepit API credentials which can be configured through user settings.",
+  "name": "keepit-msp-mcp",
+  "display_name": "Keepit MSP MCP",
+  "version": "0.1.0",
+  "description": "Keepit-MCP is a Model Context Protocol (MCP) server for the Keepit REST API.",
+  "long_description": "**Keepit Extension**\nThis extension provides a Model Context Protocol (MCP) server for interacting with the Keepit REST API.\n\n**What's Available Now (Read-Only)**\n* **Account Information**: View account status, product details, and subscription information\n* **Monitor Connectors**: View health status and list of backup connectors for each service\n* **View Backup Jobs**: Check active jobs, history, and details of backup operations across all workloads\n* **Browse Snapshots**: Explore available backup snapshots and query by time range\n* **Audit Log History**: Review audit log events for a given time period\n\n**What's Coming Later**\n* **Backup Management**: Schedule and configure backup jobs\n* **Restore Operations**: Perform restores with granular control over what gets restored\n* **Resource Management**: Track usage, compliance, and billing\n* **Anomaly Detection**: Get alerts on backup issues and irregularities\n\n**Configuration**\nThe extension requires Keepit API credentials which can be configured through user settings.",
   "author": {
-    "name": "Keepit A/S",
+    "name": "Keepit",
     "url": "https://www.keepit.com"
   },
-  "keywords": ["backup", "keepit", "microsoft-365", "sharepoint", "salesforce", "azure-devops"],
+  "keywords": [
+    "mcp",
+    "Keepit",
+    "backup",
+    "model",
+    "context",
+    "protocol"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://gitlab.off.keepit.com/development/keepit-mcp.git"
+    "url": "https://gitlab.off.keepit.com/development/keepit-msp-mcp-server.git"
   },
   "homepage": "https://www.keepit.com",
   "icon": "public/keepit_logo.png",
@@ -35,12 +42,100 @@
   },
   "tools": [
     {
-      "name": "get_cloud_connectors",
-      "description": "Get a list of cloud connectors in your account"
+      "name": "get_account_info",
+      "description": "Get a compact summary for one account. Best for a quick tenant/client overview before drilling into MFA, SSO, usage, or connectors."
     },
     {
-      "name": "get_connector_health",
-      "description": "Get the health status of a connector. You can provide either the connector GUID or the connector name (full or partial). "
+      "name": "get_account_contact_info",
+      "description": "Get the authoritative primary contact details for one account."
+    },
+    {
+      "name": "get_account_mfa_status",
+      "description": "Get account-level MFA status and configured MFA factors for one account."
+    },
+    {
+      "name": "get_account_sso_status",
+      "description": "Get account-level SSO status and SSO configuration details for one account."
+    },
+    {
+      "name": "get_account_usage_summary",
+      "description": "Get a period-based usage summary for one account. Use this for historical usage over a date range."
+    },
+    {
+      "name": "get_account_current_usage",
+      "description": "Get current usage for one account. Use this for the latest point-in-time usage snapshot."
+    },
+    {
+      "name": "get_account_resource_usage",
+      "description": "Get per-resource usage details for one account."
+    },
+    {
+      "name": "get_user_mfa_status",
+      "description": "Get per-user MFA status for a specific user."
+    },
+    {
+      "name": "list_account_users",
+      "description": "List user principals associated with one account."
+    },
+    {
+      "name": "list_account_tokens",
+      "description": "List secondary account tokens for one account."
+    },
+    {
+      "name": "list_accounts",
+      "description": "List accounts in scope. Use this to discover valid account IDs before calling more specific account or MSP tools."
+    },
+    {
+      "name": "list_sub_accounts",
+      "description": "List direct sub-accounts for one account."
+    },
+    {
+      "name": "find_account",
+      "description": "Find accounts by partial name, external ID, or account ID within the requested scope."
+    },
+    {
+      "name": "get_account_summary",
+      "description": "Get a richer single-account summary including connectors and recent audit events. Use this when a quick overview is not enough."
+    },
+    {
+      "name": "get_account_security_summary",
+      "description": "Get a focused single-account security summary covering areas such as MFA, SSO, and related posture indicators."
+    },
+    {
+      "name": "get_account_token_summary",
+      "description": "Get a focused summary of secondary tokens for one account."
+    },
+    {
+      "name": "get_account_connector_summary",
+      "description": "Get a focused summary of connectors for one account."
+    },
+    {
+      "name": "get_msp_overview",
+      "description": "Get a high-level overview across all accounts in the requested scope. Use this for broad MSP rollups, not single-account detail."
+    },
+    {
+      "name": "get_msp_security_overview",
+      "description": "Get a high-level security overview across all accounts in the requested scope."
+    },
+    {
+      "name": "get_msp_usage_overview",
+      "description": "Get a period-based MSP usage overview across all accounts in the requested scope."
+    },
+    {
+      "name": "get_msp_current_usage_overview",
+      "description": "Get a current MSP usage overview across all accounts in the requested scope."
+    },
+    {
+      "name": "get_msp_workload_usage_summary",
+      "description": "Get a period-based MSP workload usage summary across all accounts in the requested scope."
+    },
+    {
+      "name": "get_msp_current_workload_usage_summary",
+      "description": "Get a current MSP workload usage summary across all accounts in the requested scope."
+    },
+    {
+      "name": "get_msp_connector_summary",
+      "description": "Get a focused MSP connector summary across all accounts in the requested scope."
     },
     {
       "name": "get_active_jobs",
@@ -51,12 +146,24 @@
       "description": "Get a list of backup and/or restore jobs for a connector"
     },
     {
-      "name": "get_audit_log_history",
-      "description": "Get a list of audit log events for a specified period"
+      "name": "get_cloud_connectors",
+      "description": "List connectors in the requested account scope. Use this to discover connector GUIDs before calling health or summary tools. When account_id is omitted, the default scope is the authenticated/root account plus its direct child accounts."
     },
     {
-      "name": "get_my_account_info",
-      "description": "Get comprehensive account information, including status, creation date, product assignment, and service details"
+      "name": "find_connector",
+      "description": "Find connectors across the requested account scope using a partial or exact name or GUID. Use this when you know part of the connector name but not the GUID."
+    },
+    {
+      "name": "get_connector_health",
+      "description": "Get the health status for exactly one connector. Provide either guid or connector_name, not both. If connector_name could match multiple connectors, call find_connector first to resolve the GUID."
+    },
+    {
+      "name": "get_audit_log_history",
+      "description": "Get raw audit log events for one account or an account scope. Prefer scope \"account\" for a single tenant/client. Responses return at most 500 records per request window. Offset continuation is supported for single-account queries only."
+    },
+    {
+      "name": "get_audit_log_summary",
+      "description": "Get an aggregated audit summary for one account or an account scope. Use this when you want trends, counts, top actors, or top messages rather than raw events. For single-tenant questions, prefer scope \"account\"."
     },
     {
       "name": "get_latest_snapshot",

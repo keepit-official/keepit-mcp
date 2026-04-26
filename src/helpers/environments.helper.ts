@@ -1,5 +1,6 @@
 export const ENVIRONMENTS = {
     'ws': 'Denmark',
+    'ws-test': 'Denmark (test)',
     'au-sy': 'Australia',
     'ca-tr': 'Canada',
     'dk-co': 'Denmark',

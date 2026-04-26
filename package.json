@@ -1,5 +1,5 @@
 {
-  "name": "keepit-mcp",
+  "name": "keepit-msp-mcp",
   "version": "0.1.0",
   "description": "Keepit-MCP is a Model Context Protocol (MCP) server for the Keepit REST API.",
   "license": "MIT",
@@ -16,15 +16,22 @@
     "protocol"
   ],
   "scripts": {
+    "build": "tsc",
+    "sync:manifest": "node scripts/sync-manifest-tools.mjs",
     "start": "node scripts/dev.js",
+    "healthcheck": "npm run build && node scripts/healthcheck.mjs",
     "generate-mcpb": "node scripts/generate-mcpb.js",
-    "prod": "tsc && node build/main.js",
-    "lint": "eslint --fix src"
+    "prod": "npm run build && node build/main.js",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "release:check": "node scripts/release-check.mjs",
+    "test:unit": "npm run build && node --test tests/**/*.test.mjs",
+    "smoke:ci": "node scripts/ci-smoke.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.26.0",
     "dotenv": "16.5.0",
-    "fast-xml-parser": "5.3.6",
+    "fast-xml-parser": "5.7.2",
     "js-base64": "3.7.5"
   },
   "devDependencies": {
@@ -33,6 +40,7 @@
     "@stylistic/eslint-plugin": "5.6.1",
     "@types/node": "22.13.10",
     "copy-files-from-to": "3.12.1",
+    "cross-spawn": "7.0.6",
     "eslint": "9.39.2",
     "eslint-plugin-unicorn": "62.0.0",
     "express": "5.1.0",

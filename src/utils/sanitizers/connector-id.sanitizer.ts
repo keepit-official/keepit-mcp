@@ -9,5 +9,7 @@ export function validateAndSanitizeConnectorId (connectorId: string): string {
     if (!validationResult.success) {
         throw new Error(`Invalid Keepit connector GUID format. Expected format: xxxxxx-xxxxxx-xxxxxx (example: 0m34mt-wny3i2-o5fjvo). Received: ${connectorId}`);
     }
+    // Normalize to lowercase: Keepit GUIDs are case-insensitive and the API returns them in
+    // lowercase, so normalizing here ensures consistent comparison and URL construction.
     return validationResult.data.toLowerCase();
 }

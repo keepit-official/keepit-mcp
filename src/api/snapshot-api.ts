@@ -40,9 +40,10 @@ export const getSnapshotRange = (
         method: 'PUT',
         url: `/users/${userId}/devices/${deviceId}/history/range`,
         headers: getHeaders('v4'),
+        retrySafe: true,
         body: generateXmlBody({
             ...body,
-            count: body.count || 99
+            count: body.count ?? 99
         }, 'range')
     };
     const applyDataCallback = (response: string) => {
@@ -59,9 +60,7 @@ export const getSnapshotRange = (
             snapshots = normalizeArrayResponse(parsed.root.backup);
         }
 
-        // Validate and sanitize snapshot data
         const result = snapshots.map((snapshot) => {
-            // Validate required fields and provide safe defaults using getStringValue helper
             const timestamp = getStringValue(snapshot.tstamp) || 'Unknown';
             const type = getStringValue(snapshot.type) || 'Unknown';
             const size = getStringValue(snapshot.size) || 'Unknown';
@@ -73,10 +72,7 @@ export const getSnapshotRange = (
                 size,
                 account
             };
-        }).filter((snapshot) => {
-            // Filter out snapshots with suspicious or invalid data
-            return snapshot.timestamp !== 'Unknown';
-        });
+        }).filter((snapshot) => snapshot.timestamp !== 'Unknown');
 
         return result;
     };
@@ -84,22 +80,3 @@ export const getSnapshotRange = (
     return { requestConfig, applyDataCallback };
 };
 
-export const getSnapshotCount = (
-    userId: string,
-    deviceId: string,
-    body: Omit<IGetDeviceRangeBody, 'count' | 'reverse'>
-) => {
-    const requestConfig: IMakeRequestBaseParams = {
-        method: 'PUT',
-        url: `/users/${userId}/devices/${deviceId}/history/count`,
-        headers: getHeaders('v4'),
-        body: generateXmlBody(body, 'range')
-    };
-    const applyDataCallback = (response: string) => {
-        const parsed = Parser.parse(response);
-
-        return parsed?.history?.count;
-    };
-
-    return { requestConfig, applyDataCallback };
-};

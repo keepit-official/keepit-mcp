@@ -10,6 +10,15 @@ const GET_LATEST_SNAPSHOT_TOOL = {
             guid: {
                 type: 'string',
                 description: 'GUID of the connector whose latest snapshot timestamp you want'
+            },
+            account_id: {
+                type: 'string',
+                description: 'Optional account ID for scoped connector resolution'
+            },
+            scope: {
+                type: 'string',
+                enum: ['account', 'children', 'leaf', 'managed', 'all'],
+                description: 'Optional account scope for connector resolution'
             }
         },
         required: ['guid'],
@@ -58,19 +67,28 @@ const GET_SNAPSHOT_RANGE_TOOL = {
                 type: 'string',
                 description: 'GUID of the connector whose snapshot data you want.'
             },
+            account_id: {
+                type: 'string',
+                description: 'Optional account ID for scoped connector resolution'
+            },
+            scope: {
+                type: 'string',
+                enum: ['account', 'children', 'leaf', 'managed', 'all'],
+                description: 'Optional account scope for connector resolution'
+            },
             startTime: {
                 type: 'string',
-                description: 'Start date (ISO 8601). If omitted, server uses current time.'
+                description: 'Anchor timestamp (ISO 8601) for the snapshot query. If omitted, the server uses the current time.'
             },
             timespan: {
                 type: 'string',
-                description: 'Duration (ISO 8601) for the range of snapshots. (e.g., "P7D" for 7 days, "P1M" for 1 month)',
+                description: 'Duration (ISO 8601) for the snapshot window. With the default reverse=true, omitting startTime and using P7D means "the last 7 days".',
                 default: 'P7D'
             },
             reverse: {
                 type: 'boolean',
-                description: 'If true, query snapshots in reverse order, with the newest one first',
-                default: false
+                description: 'When true, search backward from startTime and return newest snapshots first. This is the default because most queries want recent history.',
+                default: true
             },
             count: {
                 type: 'integer',
@@ -107,7 +125,7 @@ const GET_SNAPSHOT_RANGE_TOOL = {
                             description: 'GUID of the account associated with this snapshot'
                         }
                     },
-                    required: ['timestamp', 'type', 'size', 'account']
+                    required: ['timestamp']
                 },
                 description: 'List of snapshots within the specified time range'
             }

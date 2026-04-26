@@ -6,6 +6,7 @@ export interface IMakeRequestBaseParams {
     authToken?: string;
     headers?: HeadersInit;
     body?: string | BodyInit;
+    retrySafe?: boolean;
     includeHeaders?: never;
 }
 

@@ -1,14 +1,14 @@
+import { isIPv4, isIPv6 } from 'node:net';
+
 export const sanitizeIPAddress = (ip: string): string => {
     if (!ip || ip === 'Unknown') return ip;
 
-    // Basic IP validation (IPv4 and IPv6)
-    const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-    const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
-
-    if (ipv4Regex.test(ip) || ipv6Regex.test(ip)) {
+    if (isIPv4(ip) || isIPv6(ip)) {
         return ip;
     }
 
-    // If not a valid IP, sanitize it
-    return ip.replace(/[^0-9a-fA-F:.]/g, '').substring(0, 45); // Max IPv6 length
+    // Fallback for non-standard values: strip anything that can't appear in an IPv4/IPv6 address
+    // and truncate to 45 chars (the maximum length of a full IPv6 address). Legitimate IPs always
+    // pass the isIPv4/isIPv6 checks above and never reach this path.
+    return ip.replace(/[^0-9a-fA-F:.]/g, '').substring(0, 45);
 };

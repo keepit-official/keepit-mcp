@@ -1,5 +1,7 @@
 // Object defines rules for 'fast-xml-parser' library.
 // Usage --> const Parser = new XMLParser(xmlParseOptions);
+// XXE note: fast-xml-parser does not support external DTD/entity processing, so XXE attacks
+// are not possible regardless of input. No explicit opt-out flag is required.
 
 const xmlParseOptions = {
     attributeNamePrefix: '_',

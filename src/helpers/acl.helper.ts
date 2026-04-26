@@ -28,30 +28,36 @@ export interface IToolRequiredAcl {
     }[];
 };
 
-export const userACL: IUserACL = {
-    eacl: '',
-    aclObject: {}
-};
-
 export const generateEaclPermissions = (eaclAsString: string) => {
     const eaclObject: IAclObject = {};
 
-    eaclAsString.split(':').forEach(function (element) {
-        const splitedElement = element.split('/');
-        eaclObject[splitedElement[1]] = {
-            get: splitedElement[0].includes('G'),
-            options: splitedElement[0].includes('O'),
-            delete: splitedElement[0].includes('D'),
-            head: splitedElement[0].includes('H'),
-            post: splitedElement[0].includes('P'),
-            put: splitedElement[0].includes('U')
-        };
-    });
+    try {
+        eaclAsString.split(':').forEach(function (element) {
+            const splitedElement = element.split('/');
+            if (splitedElement.length !== 2 || !splitedElement[0] || !splitedElement[1]) {
+                throw new Error(`Malformed EACL element: "${element}"`);
+            }
+            eaclObject[splitedElement[1]] = {
+                get: splitedElement[0].includes('G'),
+                options: splitedElement[0].includes('O'),
+                delete: splitedElement[0].includes('D'),
+                head: splitedElement[0].includes('H'),
+                post: splitedElement[0].includes('P'),
+                put: splitedElement[0].includes('U')
+            };
+        });
+    } catch (error) {
+        throw new Error(`Failed to parse EACL permissions: ${(error as Error).message}`);
+    }
 
     return eaclObject;
 };
 
-export const getAllowedTools = (tools: Tool[], requiredAcl: IToolRequiredAcl): Tool[] => {
+export const getAllowedTools = (
+    tools: Tool[],
+    requiredAcl: IToolRequiredAcl,
+    aclObject: IAclObject
+): Tool[] => {
     const missedToolsAcl: string[] = [];
     const forbiddenTools: string[] = [];
 
@@ -64,7 +70,7 @@ export const getAllowedTools = (tools: Tool[], requiredAcl: IToolRequiredAcl): T
         }
         
         const isAllowed = toolRequiredAcl.every(acl => {
-            const checkedAcl = userACL.aclObject[acl.name];
+            const checkedAcl = aclObject[acl.name];
 
             return !!checkedAcl && acl.options.every(option => checkedAcl[option]);
         });
@@ -81,7 +87,7 @@ export const getAllowedTools = (tools: Tool[], requiredAcl: IToolRequiredAcl): T
     }
 
     if (forbiddenTools.length) {
-        logger.info(`You are not allowed to use these tools: ${JSON.stringify(forbiddenTools)}`);
+        logger.warn(`You are not allowed to use these tools: ${JSON.stringify(forbiddenTools)}`);
     }
 
     return allowedTools;

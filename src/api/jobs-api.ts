@@ -1,3 +1,4 @@
+import { getHeaders } from '../helpers/make-request.helper.js';
 import { normalizeArrayResponse } from '../helpers/fetch.helper.js';
 import { XMLParser } from 'fast-xml-parser';
 import type { IGetFilteredJobsBody, IJob } from './api-types/jobs-api.js';
@@ -10,10 +11,7 @@ const Parser = new XMLParser(xmlParseOptions);
 export const getJobs = (userId: string, deviceId: string, activeOnly = false) => {
     const requestConfig = {
         url: `/users/${userId}/devices/${deviceId}/jobs`,
-        headers: {
-            'Content-Type': 'application/xml',
-            'active-jobs-only': `${activeOnly}`
-        }
+        headers: getHeaders('v4', { 'active-jobs-only': `${activeOnly}` })
     };
     const applyDataCallback = (response: string): IJob[] => {
         const jsonData = Parser.parse(response);
@@ -33,15 +31,13 @@ export const getJobsHistory = (
     const requestConfig: IMakeRequestBaseParams = {
         method: 'PUT',
         url: `/users/${userId}/devices/${deviceId}/jobs`,
-        headers: {
-            'Content-Type': 'application/xml'
-        },
+        headers: getHeaders('v4'),
+        retrySafe: true,
         body: generateXmlBody(body, 'filter')
     };
     const applyDataCallback = (response: string) => {
         const jsonData = Parser.parse(response);
-        const jobsFromResponse = jsonData?.jobs?.job ?? [];
-        const result: IJob[] = [].concat(jobsFromResponse);
+        const result = normalizeArrayResponse<IJob>(jsonData?.jobs?.job);
 
         return {
             result,

@@ -1,163 +1,135 @@
-# Example Prompts for Claude Desktop with MCP Servers
+# Example Prompts for Claude Desktop with the Keepit MSP MCP Server
 
-This document provides example prompts you can use with Claude Desktop when connected to the Keepit and Microsoft Entra ID (Azure AD) MCP servers. The prompts are organized by complexity and use case, covering all available MCP tools.
+This document provides example prompts you can use with Claude Desktop when connected to this MCP server. All operations are read-only.
 
-## 🔧 Basic Operations
+## Available Tools
 
-### Connector Management
+| Tool | What it does |
+| --- | --- |
+| `get_cloud_connectors` | List all cloud backup connectors in the account |
+| `get_connector_health` | Health status for a connector (by GUID or by name) |
+| `get_active_jobs` | Currently running backup or restore jobs for a connector |
+| `get_job_history` | Job history for a connector over a duration or date range (max 90 days) |
+| `get_audit_log_history` | Audit log events for a given time period (max 365 days) |
+| `get_latest_snapshot` | Most recent completed snapshot timestamp for a connector |
+| `get_snapshot_range` | List of snapshots within a time range for a connector |
+
+---
+
+## Basic Operations
+
+### Account & Connectors
+
+- "Show me my account information"
 - "List all my Keepit connectors"
 - "Do I have any unhealthy connectors?"
-- "Show me the health status of all my connectors"
-- "Get connector anomalies for my Office 365 connector"
-- "Show me backup summary for azure-ad connector type"
+- "Check the health of my Office 365 connector"
+- "What connectors do I have and when were they created?"
+- "Is my azure-ad connector healthy?"
 
-### Job & Backup Monitoring
-- "Get the most recent backup job information"
-- "Show me all active backup jobs"
-- "Get job history for the past week"
-- "Get the latest snapshot for my connector"
-- "Show me snapshot range from last week to now"
+### Job Monitoring
+
+- "Show me all currently active backup jobs for connector [GUID]"
+- "Get job history for the past 7 days for connector [GUID]"
+- "Were there any failed backup jobs in the last 24 hours?"
+- "Show me job history for the past month for connector [name]"
+- "What backup jobs ran yesterday for my Office 365 connector?"
+
+### Snapshots
+
+- "Get the latest snapshot for connector [GUID]"
+- "Show me snapshots from the last 7 days for my Office 365 connector"
+- "When was the last successful backup for connector [name]?"
+- "List the most recent 10 snapshots for connector [GUID] in reverse order"
+
+### Audit Logs
+
+- "Show me audit log activity for the past 24 hours"
+- "Get audit logs for the past 7 days"
+- "What actions were taken in this account over the past month?"
+- "Were there any failed access attempts in the audit log this week?"
+
+---
+
+## Operational Queries
+
+### Health & Status Overview
+
+- "Give me a health summary of all my connectors"
+- "Are any connectors in a critical or unhealthy state?"
+- "Which connectors haven't had a recent successful backup?"
+- "Show me the current status of all connectors"
+
+### Job Analysis
+
+- "Show me job history for the past 30 days and identify any failures"
+- "How many backup jobs ran last week for connector [GUID]?"
+- "Were there patterns in backup failures over the past month?"
+- "Get job history from 2025-01-01 to 2025-01-31 for connector [GUID]"
+
+### Snapshot Analysis
+
+- "How frequently are snapshots being taken for connector [GUID]?"
+- "Show me a week's worth of snapshots for connector [GUID]"
+- "Get snapshots from the past month for connector [name] — are there any gaps?"
 
 ### Audit & Compliance
-- "Show me failed audit logs from the past day"
-- "Get audit log history with duration PT6H"
-- "Show me my current resource usage"
-- "Am I violating any resource limits?"
-- "Check my resource compliance status"
-- "Get my M365 seat usage"
 
-### Microsoft 365 Integration (Lokka)
-- "Get all users in my tenant"
-- "List all Azure AD groups"
-- "Show me all guest users in my directory"
-- "List the admin users in my tenant"
-- "Find all disabled user accounts"
+- "Summarise all audit activity for the past 30 days"
+- "Review the audit log for the past week and flag anything unusual"
+- "How many audit events were there in the last month?"
 
-## 🔍 Discovery & Browsing
+---
 
-### Backup Content Exploration
-- "Browse the backup content of my Office 365 connector"
-- "Show me what's in the /Users path of my backup"
-- "Browse SharePoint sites in my backup"
-- "Find all email data in my latest snapshot"
-- "Explore the backup structure for user john@company.com"
-- "Browse my backup content"
-- "Show me what's in my latest backup"
-- "Browse the user folders in my Microsoft 365 backup"
-- "Show me the structure of my SharePoint backup"
-- "Browse my Teams backup and restore all channels"
+## MSP & Multi-Account Operations
 
-### Data Discovery
-- "What types of data are backed up in my connectors?"
-- "Show me the folder structure of my OneDrive backup"
-- "List all SharePoint sites that are being backed up"
-- "Find all Teams data in my backup"
+- "Give me a full account overview: connectors, recent jobs, and health status"
+- "Check all connectors for issues and produce a health report"
+- "Show me job failures from the past 7 days across all connectors"
+- "Produce a backup status summary — connector list, latest snapshots, and recent job activity"
+- "Review audit logs for the past month and flag anything that needs attention"
+- "Get job history across all connectors for the past week and summarise it"
 
-## 📊 Data Comparison & Analysis
+---
 
-### Backup Data Comparison
-- "Compare backup data between two snapshots for user john@company.com"
-- "Show me what changed in SharePoint sites between last week and this week"
-- "Compare email data across different time periods"
-- "Analyze differences in OneDrive content over the past month"
+## Scenario Prompts
 
-### Universal Data Comparison
-- "Compare data across different connector types for the same user"
-- "Show differences between production and backup data"
-- "Compare user permissions across multiple snapshots"
-- "Analyze data changes across all connectors for compliance audit"
+### Daily Backup Check
 
-## 📈 Resource Management & Optimization
+"Do a daily backup check: list any unhealthy connectors, show active jobs, and check for job failures in the last 24 hours."
 
-### Resource Monitoring
-- "Show me resource usage history for the past month with trends"
-- "Get a billing summary of all my resources grouped by connector"
-- "Identify which resources are approaching their limits (>80% usage)"
-- "Check my compliance status and tell me if I have a grace period"
-- "Compare resource usage between different connector types"
+### Weekly Status Report
 
-### Cost Optimization
-- "Create a cost optimization report identifying underutilized resources"
-- "Calculate the cost per user for each connector type based on resource usage"
-- "Identify seasonal patterns in resource consumption for capacity planning"
-- "Analyze resource usage trends over the past quarter and predict when I'll hit limits"
-- "Generate a resource compliance audit report with violation history"
+"Prepare a weekly backup report: account status, connector health, job success rate over the past 7 days, and notable audit events."
 
-## 🔗 Cross-Platform Intelligence
+### Incident Investigation
 
-### Basic Cross-Platform Queries
-- "List all Microsoft 365 users and check if they're being backed up in Keepit"
-- "Compare the licensed users in my tenant with users being backed up"
-- "Show me backup health status for all admin users"
-- "Check if any Guest users are included in my Keepit backups"
-- "Identify users with MFA disabled and their backup status"
+"There may have been a backup issue yesterday. Get job history for the past 48 hours and audit logs for the same period — help me understand what happened."
 
-### Advanced Cross-Platform Analysis
-- "Create a comprehensive backup compliance report for each department in my organization"
-- "Find all Microsoft 365 admin users who don't have recent successful backups and prioritize by risk level"
-- "Analyze my tenant for security risks and identify which critical data may not be adequately backed up"
-- "Compare user activity patterns with backup activity to identify potential data loss scenarios"
-- "Generate a disaster recovery readiness report showing backup coverage for critical services and users"
-- "Identify critical files from users with privileged access and create a targeted restore plan"
+### Snapshot Coverage Review
 
-## 🎯 Expert-Level Scenarios
+"Show me all snapshots for the past month for connector [GUID] and tell me if there are any gaps in the schedule."
 
-### Compliance & Governance
-- "Generate a data governance report showing data access permissions, external sharing, and backup verification for sensitive information"
-- "Find all users in regulated departments (Legal, Finance) and verify their backup compliance against regulatory requirements"
-- "Create a comprehensive security and data protection assessment that combines Microsoft 365 security posture with Keepit backup coverage"
-- "Audit all external sharing permissions in my tenant and identify security risks"
-- "Generate a security posture assessment based on MFA adoption, suspicious sign-ins, and admin practices"
+### Connector Health Check
 
-### Advanced Analytics & Optimization
-- "Analyze the relationship between user activity patterns and backup anomalies to identify potential optimization opportunities"
-- "Calculate the average backup completion time for each connector type and identify outliers"
-- "Find any gaps in my backup schedule where protected data might be at risk"
-- "Analyze my backup health trends over the past month and identify recurring issues"
-- "Create a prioritized list of backup issues that need addressing based on data criticality"
+"Check the health of every connector. For any that are unhealthy or critical, show me recent job history so I can understand what's failing."
 
-### Enterprise Operations
-- "Create a multi-service disaster recovery plan identifying critical users, data, and systems with their backup status and recovery procedures"
-- "Orchestrate a complex restoration workflow spanning multiple connectors and time periods"
-- "Plan and execute a comprehensive data migration using backup and restore capabilities"
-- "Design a backup strategy that balances cost, compliance, and recovery objectives"
-- "Create automated workflows for backup monitoring, alerting, and remediation"
-- "Implement a targeted restore strategy for all financial documents accessed during suspicious login periods and analyze for potential data exfiltration"
+---
 
-## 🔧 Technical Operations
+## Use Case Categories
 
-### API & Token Management
-- "Manage API tokens for secure connector access"
-- "Rotate API credentials across all connectors"
-- "Test API connectivity and authentication status"
-- "Configure secure token storage and access policies"
+### IT Operations Teams
 
-### Advanced Monitoring
-- "Monitor restoration progress across multiple concurrent jobs"
-- "Set up automated alerts for backup failures and anomalies"
-- "Create dashboards showing backup health across all connectors"
-- "Implement proactive monitoring for resource limit violations"
+Connector health monitoring, active job tracking, job failure triage, snapshot verification
 
-### Integration & Automation
-- "Integrate backup status with existing ITSM workflows"
-- "Automate backup verification and integrity checking"
+### Compliance Officers
 
-## 📋 Use Case Categories
+Audit log review, activity history, access event analysis
 
-### **IT Operations Teams**
-Focus on: Connector management, job monitoring, resource optimization, automated scheduling
+### MSP / Service Providers
 
-### **Compliance Officers**
-Focus on: Audit logs, compliance reporting, data governance, regulatory verification
+Per-account health checks, multi-connector job summaries, audit reporting across accounts
 
-### **Security Teams**
-Focus on: Cross-platform analysis, security posture assessment, disaster recovery planning
+### Business Continuity Managers
 
-### **Business Continuity Managers**
-Focus on: Disaster recovery simulation, business impact analysis, recovery strategy comparison
-
-### **Data Protection Officers**
-Focus on: Data discovery, backup verification, privacy compliance, data lifecycle management
-
-### **MSP/Service Providers**
-Focus on: Multi-tenant operations, automated workflows, cost optimization, service level monitoring
+Snapshot coverage verification, backup frequency analysis, failure trend identification

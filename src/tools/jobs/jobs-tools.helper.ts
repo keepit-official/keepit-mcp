@@ -4,17 +4,24 @@ import { logger } from '../../logger/logger.js';
 import { makeRequest } from '../../helpers/make-request.helper.js';
 import { subtractPeriod, TIME_IN_MS } from '../../helpers/date.helper.js';
 import { validateAndSanitizeConnectorId } from '../../utils/sanitizers/connector-id.sanitizer.js';
+import { resolveScopedConnector } from '../connector/connectors-tools.helper.js';
 import type { IAuthConfig } from '../../helpers/auth-config.helper.js';
-import type { IJob, JobsResponse } from '../../api/api-types/jobs-api.js';
+import type { IJob } from '../../api/api-types/jobs-api.js';
 import type { ToolArguments, ToolParams, ToolResult } from '../tools.interfaces.js';
 import type { z } from 'zod';
 
 type JobHistoryRequest = z.infer<typeof JobHistorySchema>;
 
+const JOBS_FETCH_CONCURRENCY = 5;
+
 export const getValidatedJobArguments = (toolParams: ToolParams): JobHistoryRequest => {
     const requestArguments = {
         guid: toolParams.arguments?.guid,
-        duration: toolParams.arguments?.duration
+        account_id: toolParams.arguments?.account_id,
+        scope: toolParams.arguments?.scope,
+        duration: toolParams.arguments?.duration,
+        startTime: toolParams.arguments?.startTime,
+        endTime: toolParams.arguments?.endTime
     };
 
     return validateJobRequest(requestArguments);
@@ -31,85 +38,103 @@ const validateJobRequest = (request: ToolArguments): JobHistoryRequest => {
         throw new Error(`Invalid configuration: ${errorMessages}`);
     }
 
-    const {
-        guid,
-        duration: lookbackDuration
-    } = validationResult.data;
+    const { guid, account_id, scope, duration, startTime, endTime } = validationResult.data;
 
     return {
         guid: validateAndSanitizeConnectorId(guid),
-        duration: lookbackDuration
+        account_id,
+        scope,
+        duration,
+        startTime,
+        endTime
     };
 };
 
-export const getJobsList = async (connectorGuid: string, authConfig: IAuthConfig): Promise<ToolResult<IJob[]>> => {
+export const getJobsList = async (request: JobHistoryRequest, authConfig: IAuthConfig): Promise<ToolResult<IJob[]>> => {
     try {
-        const { requestConfig, applyDataCallback } = getJobs(authConfig.keepitGuid, connectorGuid, true);
+        const connector = await resolveScopedConnector({
+            guid: request.guid,
+            account_id: request.account_id,
+            scope: request.scope
+        }, authConfig);
+
+        const { requestConfig, applyDataCallback } = getJobs(connector.account_id, connector.guid, true);
         const jobs = await makeRequest<IJob[]>(requestConfig, authConfig, applyDataCallback);
 
         return {
             result: jobs,
             success: true,
-            messages: [`Found ${jobs.length} jobs for ${connectorGuid} connector`]
+            messages: [`Found ${jobs.length} jobs for ${connector.guid} connector on account ${connector.account_id}`]
         };
     } catch (error) {
-        logger.error('[JOBS] Failed to get jobs for connector}', error);
+        logger.error('[JOBS] Failed to get jobs for connector', error);
         throw error;
     }
 };
 
 export const handleGetJobHistory = async (request: JobHistoryRequest, authConfig: IAuthConfig): Promise<ToolResult<IJob[]>> => {
     try {
-        const endTimeNow = new Date();
-        const endTimeISO = endTimeNow.toISOString();
+        const connector = await resolveScopedConnector({
+            guid: request.guid,
+            account_id: request.account_id,
+            scope: request.scope
+        }, authConfig);
 
-        // if we didn't get a duration, go back 24 hours
-        const startTime = request.duration
-            ? subtractPeriod(request.duration, endTimeNow)
-            : new Date(endTimeNow.getTime() - TIME_IN_MS.DAY);
+        const now = new Date();
 
-        const startTimeISO = startTime.toISOString();
+        let startTimeISO: string;
+        let endTimeISO: string;
+
+        if (request.startTime) {
+            startTimeISO = request.startTime;
+            endTimeISO = request.endTime ?? now.toISOString();
+        } else if (request.duration) {
+            endTimeISO = now.toISOString();
+            startTimeISO = subtractPeriod(request.duration, now).toISOString();
+        } else {
+            // default: last 24 hours
+            endTimeISO = now.toISOString();
+            startTimeISO = new Date(now.getTime() - TIME_IN_MS.DAY).toISOString();
+        }
 
         const loadChunkDuration = 24;
-        const allResults: IJob[] = [];
-        let baseResponse: JobsResponse | null = null;
 
         const totalHours = (new Date(endTimeISO).getTime() - new Date(startTimeISO).getTime()) / TIME_IN_MS.HOUR;
         const iterations = Math.ceil(totalHours / loadChunkDuration);
 
-        for (let i = 0; i < iterations; i++) {
+        const chunks = Array.from({ length: iterations }, (_, i) => {
             const currentTo = new Date(endTimeISO).getTime() - i * loadChunkDuration * TIME_IN_MS.HOUR;
             const currentFrom = new Date(currentTo - loadChunkDuration * TIME_IN_MS.HOUR);
-
-            const fromISO = currentFrom < new Date(startTimeISO) ? startTimeISO : currentFrom.toISOString();
-            const toISO = new Date(currentTo).toISOString();
-
-            const body = {
-                'from-time': fromISO,
-                'to-time': toISO,
-                'active-only': 'false'
+            return {
+                fromISO: currentFrom < new Date(startTimeISO) ? startTimeISO : currentFrom.toISOString(),
+                toISO: new Date(currentTo).toISOString()
             };
+        });
 
-            const { requestConfig, applyDataCallback } = getJobsHistory(authConfig.keepitGuid, request.guid, body);
-            const chunkResponse: JobsResponse = await makeRequest(requestConfig, authConfig, applyDataCallback);
-
-            if (!baseResponse) {
-                baseResponse = { ...chunkResponse, result: [] };
-            }
-
-            if (Array.isArray(chunkResponse.result)) {
-                allResults.push(...chunkResponse.result);
+        const allResults: IJob[] = [];
+        for (let i = 0; i < chunks.length; i += JOBS_FETCH_CONCURRENCY) {
+            const batch = chunks.slice(i, i + JOBS_FETCH_CONCURRENCY);
+            const batchResponses = await Promise.all(
+                batch.map(({ fromISO, toISO }) => {
+                    const body = { 'from-time': fromISO, 'to-time': toISO, 'active-only': 'false' };
+                    const { requestConfig, applyDataCallback } = getJobsHistory(connector.account_id, connector.guid, body);
+                    return makeRequest(requestConfig, authConfig, applyDataCallback);
+                })
+            );
+            for (const chunkResponse of batchResponses) {
+                if (Array.isArray(chunkResponse.result)) {
+                    allResults.push(...chunkResponse.result);
+                }
             }
         }
 
         return {
-            ...baseResponse,
             result: allResults,
             success: true,
-            messages: [`Found ${allResults.length} jobs in history for ${request.guid} connector from ${startTimeISO} to ${endTimeISO}`]
+            messages: [`Found ${allResults.length} jobs in history for ${connector.guid} connector on account ${connector.account_id} from ${startTimeISO} to ${endTimeISO}`]
         };
     } catch (error) {
-        logger.error('[JOBS] Failed to get jobs}', error);
+        logger.error('[JOBS] Failed to get jobs', error);
         throw error;
     }
 };

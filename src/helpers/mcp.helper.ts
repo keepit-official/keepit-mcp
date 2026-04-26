@@ -1,7 +1,6 @@
 import { analyticRequest } from './analytic-request.helper.js';
 import { logger } from '../logger/logger.js';
 import { toolsHandlers } from '../tools/index.js';
-import { validateEnvironment } from './validations.helper.js';
 import { z } from 'zod';
 import type { CallToolRequest, EnumSchema, JSONRPCErrorResponse, Tool } from '@modelcontextprotocol/sdk/types';
 import type { IAuthConfig } from './auth-config.helper.js';
@@ -57,8 +56,10 @@ function jsonSchemaToZodSchema(jsonSchema: IJsonSchema): Record<string, z.ZodTyp
                 }
                 break;
             case 'number':
-            case 'integer':
                 schema = z.number();
+                break;
+            case 'integer':
+                schema = z.number().int();
                 break;
             case 'boolean':
                 schema = z.boolean();
@@ -77,7 +78,7 @@ function jsonSchemaToZodSchema(jsonSchema: IJsonSchema): Record<string, z.ZodTyp
             schema = schema.default(prop.default);
         }
 
-        if (jsonSchema.required && !jsonSchema.required.includes(key)) {
+        if (!jsonSchema.required || !jsonSchema.required.includes(key)) {
             schema = schema.optional();
         }
 
@@ -131,29 +132,31 @@ export function getToolConfig(
 export function getToolCallback(name: string, authConfig: IAuthConfig): ToolCallback {
     return async (args: Record<string, unknown>) => {
         try {
-            validateEnvironment(authConfig);
-
             const result = await runTool(
                 toolsHandlers[name],
                 name,
                 authConfig,
                 args
-            );
-
-            analyticRequest({
-                action: 'Handle tool',
-                context: name
-            }, authConfig);
-
-            return result as {
+            ) as {
                 content: { type: 'text'; text: string; }[];
                 metadata?: Record<string, string | boolean | number>;
                 isError?: boolean;
             };
+
+            analyticRequest({
+                action: result?.isError ? 'Tool error' : 'Handle tool',
+                context: name
+            }, authConfig);
+
+            return result;
         } catch (error) {
+            const rawMessage = (error as Error).message ?? '';
+            // Truncated to 200 chars for the analytics context field; the full error is already
+            // logged by runTool before the throw, so no information is lost for diagnostics.
+            const truncatedContext = rawMessage.substring(0, 200);
             analyticRequest({
                 action: 'Tool error',
-                context: (error as Error).message
+                context: truncatedContext
             }, authConfig);
 
             return {

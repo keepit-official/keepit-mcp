@@ -1,10 +1,9 @@
-import { getLatestSnapshot, getSnapshotCount, getSnapshotRange } from '../../api/snapshot-api.js';
+import { getLatestSnapshot, getSnapshotRange } from '../../api/snapshot-api.js';
 import { LatestSnapshotRequestSchema, SnapshotRangeRequestSchema } from '../../utils/schemas/requests/snapshot.schemas.js';
 import { logger } from './../../logger/logger.js';
 import { makeRequest } from '../../helpers/make-request.helper.js';
 import { validateAndSanitizeConnectorId } from '../../utils/sanitizers/connector-id.sanitizer.js';
-import { validateAndSanitizeTimespan } from '../../utils/sanitizers/timespan.sanitizer.js';
-import { validateAndSanitizeTimestamp } from '../../utils/sanitizers/timestamp.sanitizer.js';
+import { resolveScopedConnector } from '../connector/connectors-tools.helper.js';
 import type { IDeviceSnapshot, ISnapshotRange } from '../../api/api-types/snapshot-api.js';
 import type { ToolArguments, ToolParams, ToolResult } from '../tools.interfaces.js';
 import type { z } from 'zod';
@@ -15,7 +14,9 @@ type SnapshotRangeRequest = z.infer<typeof SnapshotRangeRequestSchema>;
 
 export const getValidatedLatestSnapshotArgs = (toolParams: ToolParams): LatestSnapshotRequest => {
     const requestArguments = {
-        guid: toolParams.arguments?.guid
+        guid: toolParams.arguments?.guid,
+        account_id: toolParams.arguments?.account_id,
+        scope: toolParams.arguments?.scope
     };
 
     return validateLatestSnapshotRequest(requestArguments);
@@ -24,9 +25,11 @@ export const getValidatedLatestSnapshotArgs = (toolParams: ToolParams): LatestSn
 export const getValidatedSnapshotRangeArgs = (toolParams: ToolParams): SnapshotRangeRequest => {
     const requestArguments = {
         guid: toolParams.arguments?.guid,
+        account_id: toolParams.arguments?.account_id,
+        scope: toolParams.arguments?.scope,
         startTime: toolParams.arguments?.startTime ?? new Date().toISOString(),
-        timespan: toolParams.arguments?.timespan,
-        reverse: toolParams.arguments?.reverse || false,
+        timespan: toolParams.arguments?.timespan ?? 'P7D',
+        reverse: toolParams.arguments?.reverse ?? true,
         count: toolParams.arguments?.count
     };
 
@@ -45,7 +48,9 @@ export const validateLatestSnapshotRequest = (args: ToolArguments): LatestSnapsh
     }
 
     return {
-        guid: validateAndSanitizeConnectorId(validationResult.data.guid)
+        guid: validateAndSanitizeConnectorId(validationResult.data.guid),
+        account_id: validationResult.data.account_id,
+        scope: validationResult.data.scope
     };
 };
 
@@ -60,29 +65,39 @@ export const validateSnapshotRangeRequest = (args: ToolArguments): SnapshotRange
         throw new Error(`Invalid configuration: ${errorMessages}`);
     }
 
-    const { guid, startTime, timespan, reverse, count } = validationResult.data;
+    const { guid, account_id, scope, startTime, timespan, reverse, count } = validationResult.data;
 
     const validatedConnectorId = validateAndSanitizeConnectorId(guid);
-    const validatedTimestamp = validateAndSanitizeTimestamp(startTime);
-    const validatedTimespan = validateAndSanitizeTimespan(timespan);
+    const validatedTimespan = timespan.toUpperCase();
 
     return {
         guid: validatedConnectorId,
-        startTime: validatedTimestamp,
+        account_id,
+        scope,
+        startTime,
         timespan: validatedTimespan,
         reverse,
         count
     };
 };
 
-export const getLatestSnapshotByGuid = async (guid: string, authConfig: IAuthConfig): Promise<ToolResult<IDeviceSnapshot | null>> => {
+export const getLatestSnapshotByGuid = async (request: LatestSnapshotRequest, authConfig: IAuthConfig): Promise<ToolResult<IDeviceSnapshot | null>> => {
     try {
+        const connector = await resolveScopedConnector({
+            guid: request.guid,
+            account_id: request.account_id,
+            scope: request.scope
+        }, authConfig);
         const {
             requestConfig,
             applyDataCallback
-        } = getLatestSnapshot(authConfig.keepitGuid, guid);
+        } = getLatestSnapshot(connector.account_id, connector.guid);
 
         const latestSnapshot = await makeRequest(requestConfig, authConfig, applyDataCallback);
+
+        if (!latestSnapshot) {
+            throw new Error(`No latest snapshot found for connector ${connector.guid}`);
+        }
 
         return {
             result: latestSnapshot,
@@ -97,37 +112,31 @@ export const getLatestSnapshotByGuid = async (guid: string, authConfig: IAuthCon
 
 export const handleGetSnapshotRange = async (request: SnapshotRangeRequest, authConfig: IAuthConfig): Promise<ToolResult<ISnapshotRange[]>> => {
     try {
-        const { guid, startTime, timespan, reverse, count } = request;
+        const connector = await resolveScopedConnector({
+            guid: request.guid,
+            account_id: request.account_id,
+            scope: request.scope
+        }, authConfig);
+        const { startTime, timespan, reverse, count } = request;
 
-        const reverseFlag = !startTime || reverse ? { reverse: true } : {};
-        const effectiveStartTime = startTime || new Date().toISOString();
-        const validatedStartTime = validateAndSanitizeTimestamp(effectiveStartTime);
-        const validatedTimespan = validateAndSanitizeTimespan(timespan);
+        const reverseFlag = reverse ? { reverse: true } : {};
 
         const body = {
             ...reverseFlag,
-            start: validatedStartTime,
-            span: validatedTimespan,
+            start: startTime,
+            span: timespan,
             count
         };
 
         const {
             requestConfig: rangeConfig,
             applyDataCallback: rangeParser
-        } = getSnapshotRange(authConfig.keepitGuid, guid, body);
+        } = getSnapshotRange(connector.account_id, connector.guid, body);
 
         const snapshotRange = await makeRequest(rangeConfig, authConfig, rangeParser);
 
-        const {
-            requestConfig: countConfig,
-            applyDataCallback: countParser
-        } = getSnapshotCount(authConfig.keepitGuid, guid, body);
-
-        const snapshotCount = await makeRequest(countConfig, authConfig, countParser);
-
-        const responseMessage = snapshotCount > 100
-            ? `Only first 100 snapshots are returned (total=${snapshotCount})`
-            : `Returned ${snapshotCount} snapshots`;
+        const totalCount = snapshotRange.length;
+        const responseMessage = `Returned ${totalCount} snapshots`;
 
         return {
             result: snapshotRange,

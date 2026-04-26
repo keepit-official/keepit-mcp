@@ -38,28 +38,22 @@ export const ISO8601TimestampSchema = z.string()
     .refine((timestamp) => {
         try {
             const date = new Date(timestamp);
-            // Check if date is valid
             if (isNaN(date.getTime())) {
                 return false;
             }
-            // Basic date component validation
+            // Round-trip check: JS Date silently overflows invalid dates (e.g. Feb 31 → Mar 2),
+            // so compare UTC components back against the original string to catch overflow.
             const parts = timestamp.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
             if (!parts) {
                 return false;
             }
-
-            const [, , month, day, hour, minute, second] = parts;
-            const monthNum = parseInt(month, 10);
-            const dayNum = parseInt(day, 10);
-            const hourNum = parseInt(hour, 10);
-            const minuteNum = parseInt(minute, 10);
-            const secondNum = parseInt(second, 10);
-
-            return monthNum >= 1 && monthNum <= 12 &&
-                dayNum >= 1 && dayNum <= 31 &&
-                hourNum >= 0 && hourNum <= 23 &&
-                minuteNum >= 0 && minuteNum <= 59 &&
-                secondNum >= 0 && secondNum <= 59;
+            const [, year, month, day, hour, minute, second] = parts;
+            return date.getUTCFullYear() === parseInt(year, 10) &&
+                date.getUTCMonth() + 1 === parseInt(month, 10) &&
+                date.getUTCDate() === parseInt(day, 10) &&
+                date.getUTCHours() === parseInt(hour, 10) &&
+                date.getUTCMinutes() === parseInt(minute, 10) &&
+                date.getUTCSeconds() === parseInt(second, 10);
         } catch {
             return false;
         }

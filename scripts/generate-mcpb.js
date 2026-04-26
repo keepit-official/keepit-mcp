@@ -7,15 +7,17 @@ const run = (cmd) => {
 
 const runNodeModule = (cmd) => {
   console.log(`\n▶ ${cmd}`);
-  execSync(`./node_modules/.bin/${cmd}`, { stdio: "inherit" });
+  execSync(`npx ${cmd}`, { stdio: "inherit" });
 };
 // Remove files and folders
-runNodeModule('rimraf ./build ./export keepit-mcp.mcpb');
-// Build project into "build" folder
-runNodeModule('tsc');
+runNodeModule('rimraf ./build ./export keepit-msp-mcp.mcpb');
+// Build project
+run("npm run build");
+// Sync manifest metadata from runtime tool definitions for packaging
+run("npm run sync:manifest");
 // Copy all needed files and folders into "export" folder
 runNodeModule('copy-files-from-to');
 // Install production modules in "export" folder
 run("npm install --prefix ./export --omit=dev");
 // Generate MCPB-file from "export" folder
-run("npx @anthropic-ai/mcpb pack ./export keepit-mcp.mcpb");
+run("npx @anthropic-ai/mcpb pack ./export keepit-msp-mcp.mcpb");

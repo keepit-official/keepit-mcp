@@ -1,70 +1,127 @@
 import 'dotenv/config';
 
+import crypto from 'crypto';
 import type { TEnvType } from './environments.helper';
+import type { IUserACL } from './acl.helper.js';
 import { getUserId, getUserRole } from '../tools/account/account-tools.helper.js';
 import { logger } from '../logger/logger.js';
 import { Base64 } from 'js-base64';
+import { validateEnvironment } from './validations.helper.js';
 
 export interface IAuthConfig {
     keepitLogin: string;
-    keepitPass: string;
     keepitEnv: TEnvType;
     keepitGuid: string;
     sessionId: string;
     userRole: string;
     authToken: string;
+    userAcl: IUserACL;
 };
+
+const TEST_HARNESS_ACL_NAMES = [
+    'User',
+    'SsoConfigs',
+    'Tokens',
+    'ResourcesUsage',
+    'Devices',
+    'Resources',
+    'DevHealth',
+    'AuditFilter',
+    'DevJobs',
+    'History'
+] as const;
+
+const createTestHarnessAuthConfig = (): IAuthConfig => ({
+    keepitLogin: 'test-harness',
+    keepitEnv: 'au-sy',
+    sessionId: crypto.randomUUID(),
+    authToken: Base64.encode('test-harness:test-harness'),
+    keepitGuid: 'test-harness-account',
+    userRole: 'TestHarness',
+    userAcl: {
+        eacl: '',
+        aclObject: Object.fromEntries(TEST_HARNESS_ACL_NAMES.map((name) => [name, {
+            get: true,
+            options: true,
+            delete: true,
+            head: true,
+            post: true,
+            put: true
+        }]))
+    }
+});
+
+function validateStartupEnvironment(
+    keepitLogin: string,
+    keepitPass: string,
+    keepitEnv: string
+) {
+    const missing = [
+        !keepitLogin ? 'KEEPIT_USER' : '',
+        !keepitPass ? 'KEEPIT_PASS' : '',
+        !keepitEnv ? 'KEEPIT_ENV' : ''
+    ].filter(Boolean);
+
+    if (missing.length > 0) {
+        throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+    }
+}
 
 export const setupAuthConfig = async () => {
     try {
-        const tStamp = Date.now().toString(36);
-        const randomPart = Math.random().toString(36).substring(2, 10);
+        if (process.env.NODE_ENV === 'test' && process.env.KEEPIT_MCP_MOCK_AUTH === '1') {
+            const authConfig = createTestHarnessAuthConfig();
+            validateEnvironment(authConfig);
+            logger.info('Using test harness auth configuration');
+            return authConfig;
+        }
 
         const user = process.env.KEEPIT_USER || '';
         const pass = process.env.KEEPIT_PASS || '';
+        const keepitEnv = process.env.KEEPIT_ENV || '';
         const authToken = Base64.encode(`${user}:${pass}`);
+
+        validateStartupEnvironment(user, pass, keepitEnv);
+        // Remove the plaintext password from the environment immediately after encoding so it
+        // is not accessible to any code or child processes that inspect process.env later.
+        delete process.env.KEEPIT_PASS;
 
         const authConfig: IAuthConfig = {
             keepitLogin: user,
-            keepitPass: pass,
-            keepitEnv: process.env.KEEPIT_ENV as TEnvType || 'unknown',
-            sessionId: tStamp + randomPart,
+            keepitEnv: keepitEnv as TEnvType,
+            sessionId: crypto.randomUUID(),
             authToken,
             keepitGuid: '',
-            userRole: ''
+            userRole: '',
+            userAcl: {
+                eacl: '',
+                aclObject: {}
+            }
         };
+
+        validateEnvironment(authConfig);
 
         authConfig.keepitGuid = await getUserId(authConfig);
         authConfig.userRole = await getUserRole(authConfig);
 
-        // Check for required environment variables
-        const { keepitLogin, keepitPass, keepitEnv, keepitGuid } = authConfig;
+        const { keepitLogin, keepitGuid } = authConfig;
 
-        logger.info('Environment check:');
-        logger.info(`KEEPIT_USER: ${keepitLogin}`);
-        logger.info(`KEEPIT_PASS: ${keepitPass ? '[REDACTED]' : 'not set'}`);
-        logger.info(`KEEPIT_ENV: ${keepitEnv}`);
-        logger.info(`KEEPIT_GUID: ${keepitGuid}`);
+        logger.info('Environment check completed', {
+            keepitUserConfigured: !!keepitLogin,
+            keepitPassConfigured: !!pass,
+            keepitEnv,
+            keepitGuidConfigured: !!keepitGuid
+        });
 
-        if (!keepitLogin || !keepitPass || !keepitEnv || !keepitGuid) {
-            const error = new Error(
-                'Missing required environment variables: \n'
-                + 'KEEPIT_USER: ' + !!keepitLogin + '; \n'
-                + 'KEEPIT_PASS: ' + !!keepitPass + '; \n'
-                + 'KEEPIT_ENV: ' + !!keepitEnv + '; \n'
-                + 'KEEPIT_GUID: ' + !!keepitGuid + '; \n'
-            );
+        if (!keepitGuid) {
+            const error = new Error('Failed to resolve KEEPIT_GUID from the authenticated Keepit user.');
             logger.error(error.message);
             throw error;
         }
 
-        // Build the URL we want
-        const keepitUrl = 'https://' + keepitEnv + '.keepit.com/';
-        logger.info(`Using base Keepit URL: ${keepitUrl}`);
-
         return authConfig;
     } catch (error) {
-        console.error('Failed to generate auth config:', error);
+        logger.error('Failed to generate auth config:', error);
         throw error;
     }
 };

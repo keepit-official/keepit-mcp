@@ -1,6 +1,7 @@
 import { XMLBuilder } from 'fast-xml-parser';
 
-const Builder = new XMLBuilder({});
+// processEntities: true (default) ensures user-supplied strings are XML-escaped automatically.
+const Builder = new XMLBuilder({ processEntities: true });
 
 /**
  * js2xml alternative, so we shouldn`t create xml strings by hand,
@@ -94,7 +95,7 @@ export const escapeXMLChars = (string: string) =>
     ;
 
 export const unescapeXMLChars = (s: string) => {
-    const regex = /&(?:amp|#38|lt|#60|gt|#62|apos|#39|quot|#34);/g;
+    const regex = /&(?:amp|#38|lt|#60|gt|#62|apos|#39|quot|#34|#x60);/g;
     const unescaped = {
         '&amp;': '&',
         '&#38;': '&',
@@ -105,7 +106,8 @@ export const unescapeXMLChars = (s: string) => {
         '&apos;': "'",
         '&#39;': "'",
         '&quot;': '"',
-        '&#34;': '"'
+        '&#34;': '"',
+        '&#x60;': '`'
     };
     return s.replace(regex, function (m) {
         return unescaped[m as keyof typeof unescaped];

@@ -25,7 +25,7 @@ export const getConnectorsSettings = (userId: string, connectorType: string = 'c
             .filter((device: IDevice) => device.accessible !== false)
             .map((device: IDevice) => {
                 if (!device.guid || !device.name) {
-                    logger.info('[CONNECTORS] Device missing required fields:', device);
+                    logger.warn('[CONNECTORS] Device missing required fields:', device);
                     return null;
                 }
 
@@ -52,9 +52,7 @@ export const getConnectorsSettings = (userId: string, connectorType: string = 'c
 export const getConnectorHealthSettings = (userId: string, connectorGUID: string) => {
     const requestConfig = {
         url: `/users/${userId}/devices/${connectorGUID}/health`,
-        headers: {
-            'Content-Type': 'application/xml'
-        }
+        headers: getHeaders('v4')
     };
 
     const applyDataCallback = (response: string) => {
@@ -72,7 +70,7 @@ export const getConnectorHealthSettings = (userId: string, connectorGUID: string
         const validStatuses = ['healthy', 'unhealthy', 'critical'];
         const normalizedStatus = String(healthStatus).toLowerCase();
         if (!validStatuses.includes(normalizedStatus)) {
-            logger.info(`[CONNECTOR_HEALTH] Unexpected health status: ${healthStatus}`);
+            logger.warn(`[CONNECTOR_HEALTH] Unexpected health status: ${healthStatus}`);
             return 'unknown';
         }
 
