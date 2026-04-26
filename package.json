@@ -26,7 +26,8 @@
     "lint:check": "eslint src",
     "release:check": "node scripts/release-check.mjs",
     "test:unit": "npm run build && node --test tests/**/*.test.mjs",
-    "smoke:ci": "node scripts/ci-smoke.mjs"
+    "smoke:ci": "node scripts/ci-smoke.mjs",
+    "smoke:live": "npm run build && node scripts/live-smoke.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.26.0",

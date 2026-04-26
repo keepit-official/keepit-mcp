@@ -113,6 +113,18 @@ This project can be used for:
   ```
 - This verifies `KEEPIT_USER`, `KEEPIT_PASS`, `KEEPIT_ENV`, and confirms the server can resolve the authenticated user and role.
 
+### Smoke Tests
+- Run the deterministic repo smoke suite:
+  ```bash
+  npm run smoke:ci
+  ```
+- Run the optional live-tenant smoke suite against the real account in your local `.env`:
+  ```bash
+  npm run smoke:live
+  ```
+- `smoke:live` is intentionally broader than CI. It exercises real account, connector, job, audit, snapshot, and MSP flows and may skip tenant-specific checks when no client account or connector is discoverable.
+- Optional override: set `SMOKE_CONNECTOR_GUID` when you want the live smoke to target a specific connector.
+
 ### Developing the Keepit MSP MCP server
 
 Alongside the Keepit MSP MCP server, we have a dedicated **Proxy server**. This server acts as a wrapper around the MCP and allows us to **test new or existing MCP tools locally** without the need to repeatedly create MCPB packages.
