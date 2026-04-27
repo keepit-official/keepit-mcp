@@ -111,7 +111,7 @@ export const getLatestSnapshotByGuid = async (request: LatestSnapshotRequest, au
             messages: []
         };
     } catch (error) {
-        logger.error(`[LATEST_SNAPSHOT] Error getting latest snapshot: ${error}`);
+        logger.error(`[LATEST_SNAPSHOT] Error getting latest snapshot: ${error instanceof Error ? error.message : String(error)}`);
         throw error;
     }
 };
@@ -150,7 +150,7 @@ export const handleGetSnapshotRange = async (request: SnapshotRangeRequest, auth
             messages: [responseMessage]
         };
     } catch (error) {
-        logger.error(`[SNAPSHOT_RANGE] Error getting snapshots range: ${error}`);
+        logger.error(`[SNAPSHOT_RANGE] Error getting snapshots range: ${error instanceof Error ? error.message : String(error)}`);
         throw error;
     }
 };

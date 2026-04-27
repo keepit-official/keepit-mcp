@@ -2,6 +2,7 @@ import type { ZodSchema } from 'zod';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types';
 import type { ToolMetadata } from '../tools/tools.interfaces';
 import { MakeRequestErrorException } from './make-request.helper.js';
+import { logger } from '../logger/logger.js';
 
 export const createToolResponse = <T extends { [x: string]: unknown; } | undefined>(
     result: T,
@@ -26,6 +27,8 @@ export const createToolErrorResponse = (
         : error instanceof Error
             ? error.message
             : 'Unknown error';
+
+    logger.error(`[TOOL_ERROR] ${name}: ${errorMessage}`);
 
     return {
         isError: true,

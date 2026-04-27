@@ -47,7 +47,7 @@ export const generateEaclPermissions = (eaclAsString: string) => {
             };
         });
     } catch (error) {
-        throw new Error(`Failed to parse EACL permissions: ${(error as Error).message}`);
+        throw new Error(`Failed to parse EACL permissions: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     return eaclObject;
@@ -83,7 +83,7 @@ export const getAllowedTools = (
     });
 
     if (missedToolsAcl.length) {
-        logger.error(`Please provide required ACL for tools: ${JSON.stringify(missedToolsAcl)}`);
+        throw new Error(`Missing required ACL configuration for tools: ${JSON.stringify(missedToolsAcl)}`);
     }
 
     if (forbiddenTools.length) {

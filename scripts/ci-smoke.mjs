@@ -10,6 +10,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { encodeMcpMessage, tryReadMcpMessage, withEnvOverride } from './utils.mjs';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 
@@ -26,31 +27,6 @@ const expectRejects = async (fn, expectedMessage) => {
   );
 };
 
-const withEnvOverride = async (overrides, fn) => {
-  const originalValues = new Map();
-
-  for (const [key, value] of Object.entries(overrides)) {
-    originalValues.set(key, process.env[key]);
-    if (value === undefined) {
-      delete process.env[key];
-    } else {
-      process.env[key] = value;
-    }
-  }
-
-  try {
-    return await fn();
-  } finally {
-    for (const [key, value] of originalValues.entries()) {
-      if (value === undefined) {
-        delete process.env[key];
-      } else {
-        process.env[key] = value;
-      }
-    }
-  }
-};
-
 const tests = [];
 
 const test = (name, fn) => {
@@ -58,28 +34,6 @@ const test = (name, fn) => {
 };
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const encodeMcpMessage = (payload) => `${JSON.stringify(payload)}\n`;
-
-const tryReadMcpMessage = (buffer) => {
-  const newlineIndex = buffer.indexOf('\n');
-  if (newlineIndex === -1) {
-    return null;
-  }
-
-  const line = buffer.slice(0, newlineIndex).replace(/\r$/, '');
-  if (!line.trim()) {
-    return {
-      payload: null,
-      remainder: buffer.slice(newlineIndex + 1)
-    };
-  }
-
-  return {
-    payload: JSON.parse(line),
-    remainder: buffer.slice(newlineIndex + 1)
-  };
-};
 
 const waitForHttp = async (url, timeoutMs = 10_000) => {
   const startedAt = Date.now();

@@ -87,15 +87,17 @@ export const handleGetJobHistory = async (request: JobHistoryRequest, authConfig
 
         const loadChunkDuration = 24;
 
-        const totalHours = (new Date(endTimeISO).getTime() - new Date(startTimeISO).getTime()) / TIME_IN_MS.HOUR;
+        const endTimeMs = new Date(endTimeISO).getTime();
+        const startTimeMs = new Date(startTimeISO).getTime();
+        const totalHours = (endTimeMs - startTimeMs) / TIME_IN_MS.HOUR;
         const iterations = Math.ceil(totalHours / loadChunkDuration);
 
         const chunks = Array.from({ length: iterations }, (_, i) => {
-            const currentTo = new Date(endTimeISO).getTime() - i * loadChunkDuration * TIME_IN_MS.HOUR;
-            const currentFrom = new Date(currentTo - loadChunkDuration * TIME_IN_MS.HOUR);
+            const currentToMs = endTimeMs - i * loadChunkDuration * TIME_IN_MS.HOUR;
+            const currentFromMs = currentToMs - loadChunkDuration * TIME_IN_MS.HOUR;
             return {
-                fromISO: currentFrom < new Date(startTimeISO) ? startTimeISO : currentFrom.toISOString(),
-                toISO: new Date(currentTo).toISOString()
+                fromISO: currentFromMs < startTimeMs ? startTimeISO : new Date(currentFromMs).toISOString(),
+                toISO: new Date(currentToMs).toISOString()
             };
         });
 

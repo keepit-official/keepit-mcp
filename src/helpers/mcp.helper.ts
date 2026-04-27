@@ -160,18 +160,18 @@ export function getToolCallback(name: string, authConfig: IAuthConfig): ToolCall
         } catch (error) {
             // Avoid sending raw API error bodies (which may contain account data) to analytics.
             // For HTTP failures, use just the status code; for other errors, truncate the message.
-            const context = error instanceof MakeRequestErrorException
+            const errorMessage = error instanceof MakeRequestErrorException
                 ? `HTTP ${error.code}`
-                : ((error as Error).message ?? '').substring(0, 100);
+                : (error instanceof Error ? error.message : String(error)).substring(0, 100);
             analyticRequest({
                 action: 'Tool error',
-                context
+                context: errorMessage
             }, authConfig);
 
             return {
                 content: [{
                     type: 'text',
-                    text: `Error executing tool "${name}": ${error instanceof MakeRequestErrorException ? `Keepit API request failed with HTTP ${error.code}` : (error as Error).message}`
+                    text: `Error executing tool "${name}": ${error instanceof MakeRequestErrorException ? `Keepit API request failed with HTTP ${error.code}` : error instanceof Error ? error.message : String(error)}`
                 }],
                 isError: true
             } as {

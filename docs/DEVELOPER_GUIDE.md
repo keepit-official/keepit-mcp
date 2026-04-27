@@ -41,6 +41,7 @@ At startup the server:
 | `src/server/` | MCP server construction and tool registration |
 | `src/api/` | Endpoint-specific request builders and XML response parsers |
 | `src/helpers/` | Shared runtime helpers such as auth, validation, telemetry, request execution, ACL, XML, dates, and tool glue |
+| `src/logger/` | File-based logger with redaction of sensitive keys and per-level filtering |
 | `src/tools/` | MCP tool definitions, handlers, and tool-specific orchestration helpers |
 | `src/utils/` | Zod schemas and sanitizers used by tool/helper layers |
 | `scripts/` | Build, packaging, smoke, proxy, and release utilities |
@@ -70,6 +71,7 @@ At startup the server:
 | `healthcheck` | Builds first, then runs `scripts/healthcheck.mjs` |
 | `generate-mcpb` | Builds and packages the extension into `.mcpb` format |
 | `prod` | Builds then starts the compiled stdio server |
+| `sync:manifest` | Rewrites manifest metadata and tool descriptions without a full build |
 | `lint` | Runs ESLint with `--fix` against `src` |
 | `lint:check` | Runs ESLint without `--fix` against `src` |
 | `release:check` | Runs the repo’s release readiness script |
@@ -126,11 +128,13 @@ These declaration files define the shapes expected by the helper and tool layers
 
 ## Tool Layer
 
-Each tool area follows the same pattern:
+Most tool areas follow a three-file pattern:
 
 - `*-tools-definitions.ts`: MCP tool metadata and ACL requirements
 - `*-tools-handler.ts`: MCP handler wrappers that validate, call helper functions, and shape responses
 - `*-tools.helper.ts`: domain logic, aggregation, scoping, and response normalization
+
+The account tool area uses an expanded variant of this pattern — see the Account Tools table below for the full file breakdown.
 
 ### Tool Registry
 
@@ -146,7 +150,11 @@ Each tool area follows the same pattern:
 | `src/tools/account/account-context.helper.ts` | Shared account-scope traversal, request caching, concurrency control, and account metadata resolution |
 | `src/tools/account/account-tools-definitions.ts` | Account/MSP tool schemas and required ACL declarations |
 | `src/tools/account/account-tools-handler.ts` | Account/MSP MCP handler wrappers |
-| `src/tools/account/account-tools.helper.ts` | Account/MSP summaries, usage aggregation, security rollups, token/user shaping, and cross-tool orchestration |
+| `src/tools/account/account-tools.helper.ts` | Named re-export barrel — re-exports all functions from the four focused helper files below so existing consumers are unaffected |
+| `src/tools/account/account-tools-utils.ts` | Shared types (`TToolResult`, `TTokenLike`, `TAccountMfa`, `TAccountSso`, `TUserMfa`, `TResource`, `TScopedConnector`, `TMeta`) and shared utilities (`withMeta`, `coerceNumber`) used across the account helper files |
+| `src/tools/account/account-tools-nav.helper.ts` | Auth bootstrap and account navigation — `getUserId`, `getUserRole`, `listAccounts`, `listSubAccounts`, `findAccount` |
+| `src/tools/account/account-tools-single.helper.ts` | Single-account summaries, info, usage aggregation, token/user shaping, security, connector, MFA, and SSO functions (`getAccountInfo`, `getAccountContactInfo`, `getAccountMfaInfo`, `getAccountSsoInfo`, `getUserMfaInfo`, `listAccountUsers`, `listAccountTokens`, `getAccountUsageSummary`, `getAccountCurrentUsage`, `getAccountResourceUsage`, `getAccountSummary`, `getAccountSecuritySummary`, `getAccountTokenSummary`, `getAccountConnectorSummary`) |
+| `src/tools/account/account-tools-msp.helper.ts` | MSP fan-out aggregation, workload rollups, and security overviews (`getMspOverview`, `getMspSecurityOverview`, `getMspUsageOverview`, `getMspCurrentUsageOverview`, `getMspWorkloadUsageSummary`, `getMspCurrentWorkloadUsageSummary`, `getMspConnectorSummary`) |
 
 ### Connector Tools
 
@@ -199,7 +207,7 @@ Each tool area follows the same pattern:
 
 | File | Purpose |
 | --- | --- |
-| `tests/helpers.test.mjs` | Unit coverage for auth validation, retry policy, audit pagination/filtering, analytics opt-out behavior, account scope handling, ACL filtering, and MSP aggregation |
+| `tests/helpers.test.mjs` | Unit coverage for auth validation, HTTP error exception types, retry policy, scope input validation, date argument validation, audit pagination/filtering, analytics opt-out behavior, account scope handling, ACL filtering, and MSP aggregation |
 | `scripts/ci-smoke.mjs` | Black-box and process-level smoke coverage for the proxy, stdio server, manifest/tool sync, and selected helper behavior |
 | `scripts/live-smoke.mjs` | Real account coverage for the main tool surfaces using build output |
 

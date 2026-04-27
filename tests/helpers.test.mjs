@@ -2,37 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { withEnvOverride } from '../scripts/utils.mjs';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 
 const importFromBuild = async (relativePath) => {
   const absolutePath = path.join(repoRoot, 'build', relativePath);
   return import(pathToFileURL(absolutePath).href);
-};
-
-const withEnvOverride = async (overrides, fn) => {
-  const originalValues = new Map();
-
-  for (const [key, value] of Object.entries(overrides)) {
-    originalValues.set(key, process.env[key]);
-    if (value === undefined) {
-      delete process.env[key];
-    } else {
-      process.env[key] = value;
-    }
-  }
-
-  try {
-    return await fn();
-  } finally {
-    for (const [key, value] of originalValues.entries()) {
-      if (value === undefined) {
-        delete process.env[key];
-      } else {
-        process.env[key] = value;
-      }
-    }
-  }
 };
 
 const withFetchMock = async (mock, fn) => {
@@ -500,6 +476,104 @@ test('analytics request is skipped when disabled and remains non-fatal on transp
     }, async () => {
       await assert.doesNotReject(() => analyticRequest({ action: 'Tool error', context: 'test' }, authConfig));
     });
+  });
+});
+
+test('makeRequest throws MakeRequestErrorException on non-retryable HTTP error', async () => {
+  const { makeRequest } = await importFromBuild(path.join('helpers', 'make-request.helper.js'));
+
+  const authConfig = {
+    keepitLogin: 'user@example.com',
+    keepitEnv: 'au-sy',
+    keepitGuid: 'root-account',
+    sessionId: 'session-id',
+    userRole: 'Admin',
+    authToken: 'dGVzdA==',
+    userAcl: { eacl: '', aclObject: {} }
+  };
+
+  await withFetchMock(async () => {
+    return new Response('Forbidden', { status: 403 });
+  }, async () => {
+    await assert.rejects(
+      () => makeRequest({ url: '/test' }, authConfig),
+      (error) => error.name === 'MakeRequestErrorException' && error.code === 403
+    );
+  });
+});
+
+test('getEffectiveScope throws for unrecognized scope strings', async () => {
+  const { getEffectiveScope } = await importFromBuild(path.join('tools', 'account', 'account-context.helper.js'));
+
+  assert.throws(
+    () => getEffectiveScope({ scope: 'bogus' }),
+    (error) => error instanceof Error && error.message.includes('Unsupported scope')
+  );
+});
+
+test('getAccountUsageSummary throws when from_date is after to_date', async () => {
+  const { getAccountUsageSummary } = await importFromBuild(path.join('tools', 'account', 'account-tools.helper.js'));
+
+  const authConfig = {
+    keepitLogin: 'user@example.com',
+    keepitEnv: 'au-sy',
+    keepitGuid: 'root-account',
+    sessionId: 'session-id',
+    userRole: 'Admin',
+    authToken: 'dGVzdA==',
+    userAcl: { eacl: '', aclObject: {} }
+  };
+
+  await withFetchMock(async (url) => {
+    const target = new URL(url);
+    if (target.pathname === '/users/root-account') {
+      return new Response(buildUserXml('root-account', 'Root Account'), { status: 200 });
+    }
+    if (target.pathname === '/users/root-account/contacts/p') {
+      return new Response('<contact></contact>', { status: 200 });
+    }
+    if (target.pathname === '/users/root-account/devices') {
+      return new Response('<devices></devices>', { status: 200 });
+    }
+    throw new Error(`Unexpected fetch URL: ${String(url)}`);
+  }, async () => {
+    await assert.rejects(
+      () => getAccountUsageSummary(authConfig, { fromDate: '2026-02-01', toDate: '2026-01-01' }),
+      (error) => error instanceof Error && error.message.includes('from_date must be on or before to_date')
+    );
+  });
+});
+
+test('getAccountUsageSummary throws on invalid from_date format', async () => {
+  const { getAccountUsageSummary } = await importFromBuild(path.join('tools', 'account', 'account-tools.helper.js'));
+
+  const authConfig = {
+    keepitLogin: 'user@example.com',
+    keepitEnv: 'au-sy',
+    keepitGuid: 'root-account',
+    sessionId: 'session-id',
+    userRole: 'Admin',
+    authToken: 'dGVzdA==',
+    userAcl: { eacl: '', aclObject: {} }
+  };
+
+  await withFetchMock(async (url) => {
+    const target = new URL(url);
+    if (target.pathname === '/users/root-account') {
+      return new Response(buildUserXml('root-account', 'Root Account'), { status: 200 });
+    }
+    if (target.pathname === '/users/root-account/contacts/p') {
+      return new Response('<contact></contact>', { status: 200 });
+    }
+    if (target.pathname === '/users/root-account/devices') {
+      return new Response('<devices></devices>', { status: 200 });
+    }
+    throw new Error(`Unexpected fetch URL: ${String(url)}`);
+  }, async () => {
+    await assert.rejects(
+      () => getAccountUsageSummary(authConfig, { fromDate: '01-02-2026' }),
+      (error) => error instanceof Error && error.message.includes('from_date must use YYYY-MM-DD format')
+    );
   });
 });
 

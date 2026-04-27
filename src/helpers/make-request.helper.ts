@@ -126,7 +126,7 @@ async function makeRequest<T>(
             }
 
             throw new MakeRequestErrorException(
-                (error as Error).message,
+                error instanceof Error ? error.message : String(error),
                 errorCode || 500,
                 errorHeaders || new Headers()
             );

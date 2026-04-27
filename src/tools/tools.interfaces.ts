@@ -1,3 +1,9 @@
+/**
+ * Shared TypeScript types for the tool layer.
+ *
+ * These types are the boundary between tool handlers (which receive raw MCP
+ * request objects) and tool helpers (which return structured domain results).
+ */
 import type { Result, CallToolRequest, CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { IAuthConfig } from '../helpers/auth-config.helper';
 

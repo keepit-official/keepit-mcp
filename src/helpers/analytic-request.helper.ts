@@ -72,7 +72,7 @@ export const analyticRequest = async (
         }, authConfig);
         logger.info(`[ANALYTIC_RESPONSE] ${res ?? ''}`);
     } catch (err) {
-        logger.error(`[ANALYTIC_RESPONSE] ${(err as Error).message ?? String(err)}`);
+        logger.error(`[ANALYTIC_RESPONSE] ${err instanceof Error ? err.message : String(err)}`);
     }
 };
 

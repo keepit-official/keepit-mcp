@@ -50,12 +50,29 @@ export const ACCOUNT_TOOLS_DEFINITIONS = [
         ...ACCOUNT_ID_PROPERTY,
         from_date: { type: 'string' },
         to_date: { type: 'string' }
-    }, [], {}),
-    simpleTool('get_account_current_usage', 'Get current usage for one account. Use this for the latest point-in-time usage snapshot.', { ...ACCOUNT_ID_PROPERTY }, [], {}),
+    }, [], {
+        account_name: { type: 'string' },
+        period_from: { type: 'string' },
+        period_to: { type: 'string' },
+        max_seats_count: { type: 'number' },
+        workload_count: { type: 'number' },
+        account_type: { type: 'string' },
+        workloads: GENERIC_ARRAY
+    }),
+    simpleTool('get_account_current_usage', 'Get current usage for one account. Use this for the latest point-in-time usage snapshot.', { ...ACCOUNT_ID_PROPERTY }, [], {
+        account_name: { type: 'string' },
+        current_seats_count: { type: 'number' },
+        workload_count: { type: 'number' },
+        workloads: GENERIC_ARRAY
+    }),
     simpleTool('get_account_resource_usage', 'Get per-resource usage details for one account.', {
         ...ACCOUNT_ID_PROPERTY,
         include_zero_usage: { type: 'boolean' }
-    }, [], {}),
+    }, [], {
+        account_id: { type: 'string' },
+        account_name: { type: 'string' },
+        resources: GENERIC_ARRAY
+    }),
     simpleTool('get_user_mfa_status', 'Get per-user MFA status for a specific user.', {
         ...ACCOUNT_ID_PROPERTY,
         username: { type: 'string' }

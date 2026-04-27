@@ -88,14 +88,16 @@ export const subtractPeriod: TGetPeriodDate = (period, startDate = new Date()) =
         second: startDate.getUTCSeconds()
     };
 
-    // handle differences of days in month, including February
+    // When subtracting years or months the target month may be shorter than the
+    // source month (e.g. March 31 minus one month has no February 31). In that
+    // case dayOffset is set to the last valid day of the target month so that
+    // the final Date.UTC call clamps to a real date instead of rolling over.
     if (years || months) {
         const maxDaysInTargetMonth = new Date(Date.UTC(
             parsedStartDate.year - years,
-            // add one in order to get next month and prev day
-            // actually our last day in target month
+            // Day 0 of month N+1 is the last day of month N — used here to find
+            // the last valid day of the target month without a lookup table.
             parsedStartDate.month - months + 1,
-            // actual day shift
             0
         )).getUTCDate();
 

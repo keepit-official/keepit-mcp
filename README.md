@@ -318,7 +318,7 @@ Keepit MSP MCP uses a modular, composable tool architecture with three distinct 
 
 ### File Structure
 
-Each tool category has a dedicated folder with three files:
+Most tool categories follow a standard three-file layout:
 
 ```
 src/tools/
@@ -328,6 +328,20 @@ src/tools/
 │   └── [category]-tools.helper.ts           # API & business logic
 ├── index.ts                                  # Tool aggregation & export
 └── tools.interfaces.ts                       # Shared TypeScript types
+```
+
+The account tool area uses an expanded layout to manage a larger surface area:
+
+```
+src/tools/account/
+├── account-tools-definitions.ts             # Tool schemas & ACL declarations
+├── account-tools-handler.ts                 # MCP handler wrappers
+├── account-tools.helper.ts                  # Re-export barrel (backward-compatible entry point)
+├── account-tools-utils.ts                   # Shared types and utility functions
+├── account-tools-nav.helper.ts              # Auth bootstrap and account navigation
+├── account-tools-single.helper.ts           # Single-account tool logic
+├── account-tools-msp.helper.ts              # MSP fan-out aggregation logic
+└── account-context.helper.ts               # Scope traversal, caching, concurrency
 ```
 
 ## Legal Disclaimer for Keepit MCP Server

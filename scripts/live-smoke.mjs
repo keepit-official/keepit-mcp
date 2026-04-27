@@ -9,6 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { withEnvOverride } from './utils.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -90,31 +91,6 @@ const expectRejects = async (fn, expectedMessage) => {
   }
 
   throw new Error(`Expected failure containing "${expectedMessage}"`);
-};
-
-const withEnvOverride = async (overrides, fn) => {
-  const originalValues = new Map();
-
-  for (const [key, value] of Object.entries(overrides)) {
-    originalValues.set(key, process.env[key]);
-    if (value === undefined) {
-      delete process.env[key];
-    } else {
-      process.env[key] = value;
-    }
-  }
-
-  try {
-    return await fn();
-  } finally {
-    for (const [key, value] of originalValues.entries()) {
-      if (value === undefined) {
-        delete process.env[key];
-      } else {
-        process.env[key] = value;
-      }
-    }
-  }
 };
 
 const runTest = async (name, fn) => {

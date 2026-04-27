@@ -9,6 +9,9 @@ export const CONNECTOR_TYPE_LABELS: Record<string, string> = {
     'zendesk': 'Zendesk'
 };
 
+// Maps connector types to their resource API name candidates in priority order.
+// getCurrentSeatsForConnectorType in account-tools-single.helper.ts takes the
+// first resource whose usage is non-null, so earlier entries take precedence.
 export const CONNECTOR_TYPE_RESOURCE_NAMES: Record<string, string[]> = {
     'sforce': ['salesforce-seats'],
     'o365-admin': ['m365-seats', 'm365-quadseats-total', 'm365-mailboxonedrive-total'],

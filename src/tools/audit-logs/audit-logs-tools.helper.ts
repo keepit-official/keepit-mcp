@@ -283,6 +283,7 @@ const loadFilteredAuditLogs = async (
             const startOffset = accountOffsets.get(account.id) ?? 0;
             return {
                 ...await getAccountAuditLogs(authConfig, account, request, cache, startOffset, perAccountMatchingLimit),
+                accountId: account.id,
                 warning: null
             };
         } catch (error) {
@@ -291,6 +292,7 @@ const loadFilteredAuditLogs = async (
                 logs: [] as Record<string, unknown>[],
                 capped: false,
                 nextOffset: undefined,
+                accountId: account.id,
                 warning: `Failed to load audit logs for account ${account.id}: ${message}`
             };
         }
@@ -303,7 +305,7 @@ const loadFilteredAuditLogs = async (
         }
         if (result.capped) {
             capped = true;
-            warnings.push(`Audit retrieval for account ${result.logs[0]?.account_id || 'unknown'} reached the safety fetch cap of ${AUDIT_LOG_FETCH_CAP} records.`);
+            warnings.push(`Audit retrieval for account ${result.accountId} reached the safety fetch cap of ${AUDIT_LOG_FETCH_CAP} records.`);
         }
         if (!isMultiAccount && typeof result.nextOffset === 'number') {
             nextOffset = result.nextOffset;

@@ -10,6 +10,7 @@
 import express from 'express';
 import { spawn } from 'child_process';
 import 'dotenv/config.js';
+import { encodeMcpMessage, tryReadMcpMessage } from './utils.mjs';
 
 const app = express();
 const PORT = process.env.LOCAL_PORT || 3000;
@@ -35,30 +36,6 @@ const parseProxyArgs = () => {
 const MCP_PROXY_ARGS = parseProxyArgs();
 
 app.use(express.json());
-
-const encodeMcpMessage = (payload) => `${JSON.stringify(payload)}\n`;
-
-const tryReadMcpMessage = (buffer) => {
-  const newlineIndex = buffer.indexOf('\n');
-  if (newlineIndex === -1) {
-    return null;
-  }
-
-  const line = buffer.slice(0, newlineIndex).replace(/\r$/, '');
-  const remainder = buffer.slice(newlineIndex + 1);
-
-  if (!line.trim()) {
-    return {
-      payload: null,
-      remainder
-    };
-  }
-
-  return {
-    payload: JSON.parse(line),
-    remainder
-  };
-};
 
 let requestIdCounter = 1;
 let serverProcess = null;

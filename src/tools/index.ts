@@ -1,3 +1,10 @@
+/**
+ * Runtime tool registry.
+ *
+ * This module merges all tool definitions, handler maps, and required-ACL maps
+ * from each tool category into the three flat objects consumed by
+ * CustomMcpServer at startup.
+ */
 import type { ToolHandlers } from './tools.interfaces.js';
 
 import { ACCOUNT_TOOLS_DEFINITIONS, ACCOUNT_TOOLS_REQUIRED_ACL } from './account/account-tools-definitions.js';

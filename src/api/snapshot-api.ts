@@ -88,6 +88,9 @@ export const getSnapshotRange = (
                 size,
                 account
             };
+        // Only timestamp drives the filter — snapshots without a timestamp have no usable
+        // identity. Other fields (type, size, account) may legitimately be 'Unknown' when
+        // the API omits them; callers should treat 'Unknown' as a missing-data sentinel.
         }).filter((snapshot) => snapshot.timestamp !== 'Unknown');
 
         return result;
