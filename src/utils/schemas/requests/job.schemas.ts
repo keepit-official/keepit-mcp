@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ConnectorGuidSchema } from '../entities/connector.schemas.js';
+import { AccountIdSchema } from '../entities/account.schemas.js';
 import { durationToDays, parseISO8601Duration } from '../../../helpers/date.helper.js';
 import { ISO8601TimestampSchema } from '../validations/iso8601.validation-schemas.js';
 
@@ -31,7 +32,7 @@ const JobDurationSchema = z.string()
 
 export const JobHistorySchema = z.object({
     guid: ConnectorGuidSchema,
-    account_id: z.string().trim().min(1, 'Account id cannot be empty').optional(),
+    account_id: AccountIdSchema.optional(),
     scope: z.enum(['account', 'children', 'leaf', 'managed', 'all']).optional(),
     duration: JobDurationSchema.optional(),
     startTime: ISO8601TimestampSchema.optional(),

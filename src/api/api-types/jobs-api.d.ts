@@ -139,14 +139,6 @@ interface IPublicFolderRestoreRules {
  * end of O365 section
  */
 interface IRestoreConfigRules {
-    /**
-     * leave this section for now just for backward compatibility
-     */
-    RestoreSites?: IRestoreConfig;
-    RestoreSharePoint?: IRestoreConfig;
-    /**
-     * end of this temporary section
-     */
     RestorePaths?: {
         Path: string | string[];
     };

@@ -1,3 +1,9 @@
+/**
+ * Snapshot tool orchestration layer.
+ *
+ * This module validates snapshot arguments, resolves the target connector, and
+ * adapts low-level snapshot endpoint responses into the MCP tool result shape.
+ */
 import { getLatestSnapshot, getSnapshotRange } from '../../api/snapshot-api.js';
 import { LatestSnapshotRequestSchema, SnapshotRangeRequestSchema } from '../../utils/schemas/requests/snapshot.schemas.js';
 import { logger } from './../../logger/logger.js';
@@ -141,7 +147,7 @@ export const handleGetSnapshotRange = async (request: SnapshotRangeRequest, auth
         return {
             result: snapshotRange,
             success: true,
-            messages: [`[SNAPSHOT_RANGE] ${responseMessage}`]
+            messages: [responseMessage]
         };
     } catch (error) {
         logger.error(`[SNAPSHOT_RANGE] Error getting snapshots range: ${error}`);

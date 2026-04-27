@@ -1,3 +1,9 @@
+/**
+ * Startup healthcheck for local operators.
+ *
+ * This script imports built runtime modules, resolves auth configuration, and
+ * reports a small status summary without invoking the full MCP server loop.
+ */
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 

@@ -79,37 +79,37 @@ export const subtractPeriod: TGetPeriodDate = (period, startDate = new Date()) =
     } = parseISO8601Duration(period);
 
     const parsedStartDate = {
-        year: startDate.getFullYear(),
-        month: startDate.getMonth(),
-        day: startDate.getDate(),
+        year: startDate.getUTCFullYear(),
+        month: startDate.getUTCMonth(),
+        day: startDate.getUTCDate(),
         dayOffset: 0,
-        hour: startDate.getHours(),
-        minutes: startDate.getMinutes(),
-        second: startDate.getSeconds()
+        hour: startDate.getUTCHours(),
+        minutes: startDate.getUTCMinutes(),
+        second: startDate.getUTCSeconds()
     };
 
     // handle differences of days in month, including February
     if (years || months) {
-        const maxDaysInTargetMonth = new Date(
+        const maxDaysInTargetMonth = new Date(Date.UTC(
             parsedStartDate.year - years,
             // add one in order to get next month and prev day
             // actually our last day in target month
             parsedStartDate.month - months + 1,
             // actual day shift
             0
-        ).getDate();
+        )).getUTCDate();
 
         if (parsedStartDate.day > maxDaysInTargetMonth) {
             parsedStartDate.dayOffset = maxDaysInTargetMonth;
-        };
+        }
     }
 
-    return new Date(
+    return new Date(Date.UTC(
         parsedStartDate.year - years,
         parsedStartDate.month - months,
         (parsedStartDate.dayOffset || parsedStartDate.day) - days - weeks * 7,
         parsedStartDate.hour - hours,
         parsedStartDate.minutes - minutes,
         parsedStartDate.second - seconds
-    );
+    ));
 };

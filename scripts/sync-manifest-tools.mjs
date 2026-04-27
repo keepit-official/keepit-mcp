@@ -1,3 +1,9 @@
+/**
+ * Manifest synchronization step used by packaging and release checks.
+ *
+ * The script rewrites selected manifest metadata from `package.json` and
+ * refreshes the manifest tool list from the compiled runtime registry.
+ */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';

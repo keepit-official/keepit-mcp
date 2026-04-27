@@ -80,37 +80,4 @@ export const generateXmlBody = (xmlConfigObject: object, parentKey = '') => {
     return Builder.build(normalizedXmlBodyData);
 };
 
-/**
- * Escapes all potentially dangerous characters, so that the
- * resulting string can be safely used for correct sending XML strings in requests
- */
-export const escapeXMLChars = (string: string) =>
-    string
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&apos;')
-        .replace(/`/g, '&#x60;')
-    ;
-
-export const unescapeXMLChars = (s: string) => {
-    const regex = /&(?:amp|#38|lt|#60|gt|#62|apos|#39|quot|#34|#x60);/g;
-    const unescaped = {
-        '&amp;': '&',
-        '&#38;': '&',
-        '&lt;': '<',
-        '&#60;': '<',
-        '&gt;': '>',
-        '&#62;': '>',
-        '&apos;': "'",
-        '&#39;': "'",
-        '&quot;': '"',
-        '&#34;': '"',
-        '&#x60;': '`'
-    };
-    return s.replace(regex, function (m) {
-        return unescaped[m as keyof typeof unescaped];
-    });
-};
 

@@ -1,3 +1,9 @@
+/**
+ * Minimal MCP-compatible stdio server used by CI smoke tests.
+ *
+ * It implements just enough of the initialize and tool-call flow to verify
+ * that the local dev proxy can talk to a persistent MCP child process.
+ */
 const encodeMessage = (payload) => `${JSON.stringify(payload)}\n`;
 
 const tryReadMessage = (buffer) => {

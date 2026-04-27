@@ -1,5 +1,13 @@
+/**
+ * MCP registration glue.
+ *
+ * This module adapts the repository's tool definitions into the MCP SDK's
+ * runtime registration format and wraps tool callbacks with analytics/error
+ * handling.
+ */
 import { analyticRequest } from './analytic-request.helper.js';
 import { logger } from '../logger/logger.js';
+import { MakeRequestErrorException } from './make-request.helper.js';
 import { toolsHandlers } from '../tools/index.js';
 import { z } from 'zod';
 import type { CallToolRequest, EnumSchema, JSONRPCErrorResponse, Tool } from '@modelcontextprotocol/sdk/types';
@@ -74,12 +82,12 @@ function jsonSchemaToZodSchema(jsonSchema: IJsonSchema): Record<string, z.ZodTyp
         if (prop.description) {
             schema = schema.describe(prop.description);
         }
-        if (prop.default !== undefined) {
-            schema = schema.default(prop.default);
-        }
 
         if (!jsonSchema.required || !jsonSchema.required.includes(key)) {
             schema = schema.optional();
+        }
+        if (prop.default !== undefined) {
+            schema = schema.default(prop.default);
         }
 
         zodSchemas[key] = schema;
@@ -150,17 +158,21 @@ export function getToolCallback(name: string, authConfig: IAuthConfig): ToolCall
 
             return result;
         } catch (error) {
-            const rawMessage = (error as Error).message ?? '';
-            // Truncated to 200 chars for the analytics context field; the full error is already
-            // logged by runTool before the throw, so no information is lost for diagnostics.
-            const truncatedContext = rawMessage.substring(0, 200);
+            // Avoid sending raw API error bodies (which may contain account data) to analytics.
+            // For HTTP failures, use just the status code; for other errors, truncate the message.
+            const context = error instanceof MakeRequestErrorException
+                ? `HTTP ${error.code}`
+                : ((error as Error).message ?? '').substring(0, 100);
             analyticRequest({
                 action: 'Tool error',
-                context: truncatedContext
+                context
             }, authConfig);
 
             return {
-                content: [{ type: 'text', text: `Error executing tool "${name}": ${(error as Error).message}` }],
+                content: [{
+                    type: 'text',
+                    text: `Error executing tool "${name}": ${error instanceof MakeRequestErrorException ? `Keepit API request failed with HTTP ${error.code}` : (error as Error).message}`
+                }],
                 isError: true
             } as {
                 content: { type: 'text'; text: string; }[];

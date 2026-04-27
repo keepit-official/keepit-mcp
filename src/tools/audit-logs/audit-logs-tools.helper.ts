@@ -1,3 +1,10 @@
+/**
+ * Audit log orchestration layer.
+ *
+ * This module resolves account scope, applies audit-specific filter logic,
+ * handles single-account continuation offsets, masks tokens by default, and
+ * computes aggregated summaries from raw log windows.
+ */
 import { AuditLogRequestSchema, AuditLogSummaryRequestSchema, AUDIT_LOG_DEFAULT_PAGE_SIZE, AUDIT_LOG_FETCH_CAP, AUDIT_LOG_MAX_PAGE_SIZE, AUDIT_LOG_UPSTREAM_PAGE_SIZE } from '../../utils/schemas/requests/audit-log.schemas.js';
 import { getAuditLogHistorySettings } from '../../api/audit-logs-api.js';
 import { getTokens } from '../../api/authentication-api.js';
@@ -153,7 +160,7 @@ const matchesAuditFilters = (entry: Record<string, unknown>, request: AuditLogRe
 const getAccountAuditLogs = async (
     authConfig: IAuthConfig,
     account: TResolvedAuditAccount,
-    request: AuditLogRequest | AuditLogSummaryRequest & { summarize_full_window?: boolean; },
+    request: AuditLogRequest | AuditLogSummaryRequest,
     cache: Map<string, Promise<unknown>>,
     startOffset = 0,
     maxMatchingRecords = AUDIT_LOG_FETCH_CAP
@@ -242,7 +249,7 @@ const getAccountAuditLogs = async (
 };
 
 const loadFilteredAuditLogs = async (
-    request: AuditLogRequest | AuditLogSummaryRequest & { summarize_full_window?: boolean; },
+    request: AuditLogRequest | AuditLogSummaryRequest,
     authConfig: IAuthConfig
 ): Promise<TAggregatedAuditLoadResult> => {
     const cache = createRequestCache();
@@ -399,10 +406,7 @@ export const getAuditLogSummary = async (
 ): Promise<ToolResult<Record<string, unknown>>> => {
     try {
         const topN = Math.max(1, Math.min(Number(request.top_n) || 10, 25));
-        const { resolvedAccounts, warnings, filteredLogs, sortOrder, capped } = await loadFilteredAuditLogs({
-            ...request,
-            summarize_full_window: true
-        }, authConfig);
+        const { resolvedAccounts, warnings, filteredLogs, sortOrder, capped } = await loadFilteredAuditLogs(request, authConfig);
         const windowEnd = new Date();
         const windowStart = subtractPeriod(request.duration, windowEnd);
         const accountCounts = new Map<string, number>();

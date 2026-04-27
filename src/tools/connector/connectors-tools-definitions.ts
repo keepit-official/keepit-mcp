@@ -33,6 +33,31 @@ const connectorObjectSchema = {
     required: ['guid', 'account_id']
 } as const;
 
+const GET_CONNECTOR_BY_GUID_TOOL: Tool = {
+    name: 'get_connector',
+    description: 'Retrieve a single connector by its exact GUID. Returns one result or an error if the GUID is not found in scope. Provide account_id to narrow the search to one account and avoid scanning the full tree.',
+    inputSchema: {
+        type: 'object',
+        properties: {
+            guid: {
+                type: 'string',
+                description: 'Exact GUID of the connector to retrieve (format: xxxxxx-xxxxxx-xxxxxx)'
+            },
+            ...ACCOUNT_ID_PROPERTY,
+            ...SCOPE_PROPERTY
+        },
+        required: ['guid'],
+        additionalProperties: false
+    },
+    outputSchema: {
+        type: 'object',
+        properties: {
+            connector: connectorObjectSchema
+        },
+        required: ['connector']
+    }
+} as const satisfies Tool;
+
 const GET_KEEPIT_CLOUD_CONNECTORS_TOOL: Tool = {
     name: 'get_cloud_connectors',
     description: 'List connectors in the requested account scope. Use this to discover connector GUIDs before calling health or summary tools. When account_id is omitted, the default scope is the authenticated/root account plus its direct child accounts.',
@@ -119,6 +144,10 @@ const GET_KEEPIT_CONNECTOR_HEALTH_TOOL = {
 } as const satisfies Tool;
 
 export const CONNECTORS_TOOLS_REQUIRED_ACL: IToolRequiredAcl = {
+    get_connector: [{
+        name: 'Devices',
+        options: ['get']
+    }],
     get_cloud_connectors: [{
         name: 'Devices',
         options: ['get']
@@ -137,6 +166,7 @@ export const CONNECTORS_TOOLS_REQUIRED_ACL: IToolRequiredAcl = {
 };
 
 export const CONNECTOR_TOOLS_DEFINITIONS = [
+    GET_CONNECTOR_BY_GUID_TOOL,
     GET_KEEPIT_CLOUD_CONNECTORS_TOOL,
     FIND_CONNECTOR_TOOL,
     GET_KEEPIT_CONNECTOR_HEALTH_TOOL

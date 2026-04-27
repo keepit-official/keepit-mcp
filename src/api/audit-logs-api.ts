@@ -11,6 +11,9 @@ import xmlParseOptions from './fast-xml-parser-options.js';
 const Parser = new XMLParser(xmlParseOptions);
 
 function maskSensitiveToken(token: string): string {
+    // 'Unknown' is a placeholder string emitted by the API when no token is recorded — it is
+    // not a real credential and is returned unchanged intentionally (masking it to '***' would
+    // make it indistinguishable from a real short token that was redacted).
     if (!token || token === 'Unknown') return token;
     // Guard at 8: we take 4 chars from each end; a token of 9+ chars ensures the prefix and
     // suffix never overlap. Anything <= 8 is fully replaced to avoid leaking the full value.
@@ -46,7 +49,7 @@ export const getAuditLogHistorySettings = (body: IAuditLogBody, paginationParams
             result: {
                 auditLogs: [],
                 pagination: {
-                    hasMorePages: !!nextOffset,
+                    hasMorePages: nextOffset !== undefined,
                     nextOffset,
                     totalInResponse: 0
                 }
@@ -66,6 +69,9 @@ export const getAuditLogHistorySettings = (body: IAuditLogBody, paginationParams
 
         logger.info(`[AUDIT_LOGS] Records in response: ${logEntries.length}, Offset: ${offset}, Limit: ${limit}`);
 
+        // raw_token preserves the original token value for internal use (username resolution,
+        // token_contains filtering). It is stripped from the final tool response at the
+        // audit-logs-tools.helper layer before any data reaches the tool caller.
         const processedRecords: IAuditLogRecord[] = logEntries
             .reduce<IAuditLogRecord[]>((acc, record) => {
                 if (record.account !== undefined) {
@@ -91,14 +97,14 @@ export const getAuditLogHistorySettings = (body: IAuditLogBody, paginationParams
             result: {
                 auditLogs: processedRecords,
                 pagination: {
-                    hasMorePages: !!nextOffset,
+                    hasMorePages: nextOffset !== undefined,
                     nextOffset,
                     totalInResponse: totalRecords
                 }
             },
             messages: [
                 `Retrieved ${totalRecords} audit log records`,
-                nextOffset ? `Use nextOffset ${nextOffset} to fetch more records` : 'No more records available'
+                nextOffset !== undefined ? `Use nextOffset ${nextOffset} to fetch more records` : 'No more records available'
             ]
         };
     };

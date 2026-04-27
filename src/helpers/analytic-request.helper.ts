@@ -1,3 +1,9 @@
+/**
+ * Optional analytics sender for MCP tool usage.
+ *
+ * Analytics can be disabled at runtime with `KEEPIT_DISABLE_ANALYTICS`. The
+ * helper hashes the account GUID before constructing the analytics payload.
+ */
 import { getHeaders, makeRequest } from './make-request.helper.js';
 import { generateXmlBody } from './xml-helper.js';
 import { logger } from '../logger/logger.js';
@@ -16,7 +22,7 @@ const isAnalyticsDisabled = () => {
         return false;
     }
 
-    return value === '1' || value === 'true' || value === 'yes';
+    return value === '1' || value === 'true' || value === 'yes' || value === 'on';
 };
 
 export const analyticRequest = async (
@@ -42,6 +48,10 @@ export const analyticRequest = async (
 
     const hashedGuid = getHashedUserGuid(authConfig.keepitGuid);
 
+    // `id` combines a SHA-256 hash of the account GUID with the session ID.
+    // The session ID is a random UUID generated once per server startup, so all
+    // tool calls within one run share the same session ID — enabling session-level
+    // analytics grouping without cross-session tracking.
     const body = generateXmlBody({
         title: {
             environment: ENVIRONMENTS[authConfig.keepitEnv] ?? authConfig.keepitEnv.replace('ws-', ''),
@@ -51,6 +61,8 @@ export const analyticRequest = async (
         item
     }, 'analytic');
 
+    // Analytics is fire-and-forget: errors are logged but not re-thrown so that a
+    // telemetry failure never surfaces to the tool caller.
     try {
         const res = await makeRequest({
             url: '/analytics/mcp/data',

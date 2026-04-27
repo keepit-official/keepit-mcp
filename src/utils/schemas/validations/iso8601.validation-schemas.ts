@@ -28,12 +28,13 @@ export const ISO8601DurationSchema = z.string()
     });
 
 
-// ISO8601 timestamp validation
+// ISO8601 timestamp validation — UTC only (trailing Z required).
+// The Keepit API expects UTC timestamps; timezone offsets (e.g. +10:00) are intentionally rejected.
 export const ISO8601TimestampSchema = z.string()
     .min(1, 'Timestamp cannot be empty')
     .regex(
         /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/,
-        'Invalid ISO8601 timestamp format'
+        'Invalid ISO8601 timestamp format (expected UTC, e.g. 2026-01-01T00:00:00Z)'
     )
     .refine((timestamp) => {
         try {

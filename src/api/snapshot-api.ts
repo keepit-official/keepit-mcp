@@ -2,6 +2,8 @@ import { generateXmlBody } from '../helpers/xml-helper.js';
 import { getHeaders } from '../helpers/make-request.helper.js';
 import { getStringValue } from '../helpers/validations.helper.js';
 import { normalizeArrayResponse } from '../helpers/fetch.helper.js';
+import { encodePathSegment } from '../helpers/url-path.helper.js';
+import { logger } from '../logger/logger.js';
 import { XMLParser } from 'fast-xml-parser';
 import type { IDeviceSnapshot, IGetDeviceRangeBody } from './api-types/snapshot-api.js';
 import type { IMakeRequestBaseParams } from '../helpers/interfaces/make-request.interface.js';
@@ -10,8 +12,10 @@ import xmlParseOptions from './fast-xml-parser-options.js';
 const Parser = new XMLParser(xmlParseOptions);
 
 export const getLatestSnapshot = (userId: string, deviceId: string) => {
+    const encodedUserId = encodePathSegment(userId);
+    const encodedDeviceId = encodePathSegment(deviceId);
     const requestConfig = {
-        url: `/users/${userId}/devices/${deviceId}/history/latest`,
+        url: `/users/${encodedUserId}/devices/${encodedDeviceId}/history/latest`,
         headers: getHeaders('v1')
     };
     const applyDataCallback = (response: string): IDeviceSnapshot | null => {
@@ -25,6 +29,11 @@ export const getLatestSnapshot = (userId: string, deviceId: string) => {
         if (parsed?.root?.backup) return parsed.root.backup;
         if (parsed?.snapshots?.snapshot) return parsed.snapshots.snapshot;
 
+        const meaningfulKeys = Object.keys(parsed).filter((k) => k !== '?xml');
+        if (meaningfulKeys.length > 0) {
+            logger.warn('[SNAPSHOT] Unrecognized response shape in getLatestSnapshot', { keys: meaningfulKeys });
+        }
+
         return null;
     };
 
@@ -36,9 +45,11 @@ export const getSnapshotRange = (
     deviceId: string,
     body: IGetDeviceRangeBody
 ) => {
+    const encodedUserId = encodePathSegment(userId);
+    const encodedDeviceId = encodePathSegment(deviceId);
     const requestConfig: IMakeRequestBaseParams = {
         method: 'PUT',
-        url: `/users/${userId}/devices/${deviceId}/history/range`,
+        url: `/users/${encodedUserId}/devices/${encodedDeviceId}/history/range`,
         headers: getHeaders('v4'),
         retrySafe: true,
         body: generateXmlBody({
@@ -58,6 +69,11 @@ export const getSnapshotRange = (
             snapshots = normalizeArrayResponse(parsed.backup);
         } else if (parsed?.root?.backup) {
             snapshots = normalizeArrayResponse(parsed.root.backup);
+        } else {
+            const meaningfulKeys = Object.keys(parsed).filter((k) => k !== '?xml');
+            if (meaningfulKeys.length > 0) {
+                logger.warn('[SNAPSHOT] Unrecognized response shape in getSnapshotRange', { keys: meaningfulKeys });
+            }
         }
 
         const result = snapshots.map((snapshot) => {
@@ -79,4 +95,3 @@ export const getSnapshotRange = (
 
     return { requestConfig, applyDataCallback };
 };
-

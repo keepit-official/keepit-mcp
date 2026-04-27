@@ -1,16 +1,17 @@
 import { z } from 'zod';
 import { ConnectorGuidSchema } from '../entities/connector.schemas.js';
+import { AccountIdSchema } from '../entities/account.schemas.js';
 import { ISO8601TimestampSchema, ISO8601DurationSchema } from '../validations/iso8601.validation-schemas.js';
 
 export const LatestSnapshotRequestSchema = z.object({
     guid: ConnectorGuidSchema,
-    account_id: z.string().trim().min(1, 'Account id cannot be empty').optional(),
+    account_id: AccountIdSchema.optional(),
     scope: z.enum(['account', 'children', 'leaf', 'managed', 'all']).optional()
 });
 
 export const SnapshotRangeRequestSchema = z.object({
     guid: ConnectorGuidSchema,
-    account_id: z.string().trim().min(1, 'Account id cannot be empty').optional(),
+    account_id: AccountIdSchema.optional(),
     scope: z.enum(['account', 'children', 'leaf', 'managed', 'all']).optional(),
     startTime: ISO8601TimestampSchema,
     timespan: ISO8601DurationSchema,

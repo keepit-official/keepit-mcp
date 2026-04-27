@@ -1,14 +1,16 @@
 import { getHeaders } from '../helpers/make-request.helper.js';
 import { logger } from '../logger/logger.js';
 import { normalizeArrayResponse } from '../helpers/fetch.helper.js';
+import { encodePathSegment } from '../helpers/url-path.helper.js';
 import { XMLParser } from 'fast-xml-parser';
 import xmlParseOptions from './fast-xml-parser-options.js';
 
 const Parser = new XMLParser(xmlParseOptions);
 
 export const getConnectorsSettings = (userId: string, connectorType: string = 'cloud') => {
+    const encodedUserId = encodePathSegment(userId);
     const requestConfig = {
-        url: `/users/${userId}/devices`,
+        url: `/users/${encodedUserId}/devices`,
         headers: getHeaders('v4')
     };
     const applyDataCallback = (response: string) => {
@@ -50,8 +52,10 @@ export const getConnectorsSettings = (userId: string, connectorType: string = 'c
 };
 
 export const getConnectorHealthSettings = (userId: string, connectorGUID: string) => {
+    const encodedUserId = encodePathSegment(userId);
+    const encodedConnectorGuid = encodePathSegment(connectorGUID);
     const requestConfig = {
-        url: `/users/${userId}/devices/${connectorGUID}/health`,
+        url: `/users/${encodedUserId}/devices/${encodedConnectorGuid}/health`,
         headers: getHeaders('v4')
     };
 

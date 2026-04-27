@@ -1,3 +1,11 @@
+/**
+ * Live tenant verification suite.
+ *
+ * This script imports the compiled build output and exercises the main tool
+ * surfaces against a real Keepit account. Credentials are loaded from the file
+ * referenced by `KEEPIT_ENV_FILE` or, when that variable is unset, from
+ * `<repo>/.env`.
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -14,9 +22,19 @@ const defaultConfig = {
 
 const normalizeArray = (value) => Array.isArray(value) ? value : value ? [value] : [];
 
+const hasRequiredKeepitEnv = () =>
+  Boolean(process.env.KEEPIT_USER && process.env.KEEPIT_PASS && process.env.KEEPIT_ENV)
+;
+
 const loadDotEnv = (filename) => {
   if (!fs.existsSync(filename)) {
-    throw new Error(`Missing .env file at ${filename}`);
+    if (hasRequiredKeepitEnv()) {
+      return;
+    }
+
+    throw new Error(
+      `Missing .env file at ${filename}. Provide KEEPIT_ENV_FILE, create the file, or export KEEPIT_USER, KEEPIT_PASS, and KEEPIT_ENV in the process environment.`
+    );
   }
   const lines = fs.readFileSync(filename, 'utf8').split(/\r?\n/);
   for (const line of lines) {

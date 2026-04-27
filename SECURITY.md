@@ -1,6 +1,22 @@
+## Scope and Support Posture
+
+This repository is documented as an independent fork intended to help MSPs get started with an MSP-oriented Keepit MCP implementation.
+
+Current support posture for this fork:
+
+- No ongoing maintenance commitment or response SLA is promised in this repository.
+- Security fixes may be made on a best-effort basis.
+- This file does not represent an official Keepit support or incident-response commitment for the fork.
+
 ### Credential Management
 
 For production use, we recommend using a secrets manager instead of storing credentials in clear text file. The MCP reads credentials from environment variables, so any method that injects `KEEPIT_USER`, `KEEPIT_PASS`, and `KEEPIT_ENV` will work.
+
+### Reporting Guidance
+
+- Do not post real credentials, tenant data, access tokens, or exploit material in public issues.
+- If GitHub private vulnerability reporting is enabled for the fork, prefer that channel for sensitive reports.
+- If no private reporting channel is enabled, sanitize the report first or handle it through a private communication path you control before publishing details.
 
 ### Basic Setup (Non-Encrypted)
 

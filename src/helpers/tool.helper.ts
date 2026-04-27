@@ -1,6 +1,7 @@
 import type { ZodSchema } from 'zod';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types';
 import type { ToolMetadata } from '../tools/tools.interfaces';
+import { MakeRequestErrorException } from './make-request.helper.js';
 
 export const createToolResponse = <T extends { [x: string]: unknown; } | undefined>(
     result: T,
@@ -20,7 +21,11 @@ export const createToolErrorResponse = (
     name: string,
     error: unknown | Error
 ): CallToolResult => {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof MakeRequestErrorException
+        ? `Keepit API request failed with HTTP ${error.code}`
+        : error instanceof Error
+            ? error.message
+            : 'Unknown error';
 
     return {
         isError: true,
@@ -45,7 +50,7 @@ export function parseToolArgsOrThrow(
 
     if (!success) {
         const message = error.errors
-            .map(err => `${err.path.join('.')}: ${err.message}`)
+            .map(err => err.path.length > 0 ? `${err.path.join('.')}: ${err.message}` : err.message)
             .join('; ');
 
         throw new Error(`${context}: ${message}`);

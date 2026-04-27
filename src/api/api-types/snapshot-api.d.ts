@@ -22,5 +22,3 @@ export interface IGetDeviceRangeBody {
     reverse?: boolean; // reverse the query (cannot be used if resolution is used)
 }
 
-export type LatestSnapshotRequest = z.infer<typeof LatestSnapshotRequestSchema>;
-export type SnapshotRangeRequest = z.infer<typeof SnapshotRangeRequestSchema>;

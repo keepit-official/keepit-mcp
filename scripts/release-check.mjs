@@ -1,3 +1,9 @@
+/**
+ * Aggregated release verification entrypoint.
+ *
+ * The current implementation runs build, manifest sync, lint, unit tests,
+ * deterministic smoke tests, and MCPB packaging in sequence.
+ */
 import { execSync } from 'node:child_process';
 
 const run = (command) => {

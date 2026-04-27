@@ -1,5 +1,13 @@
 import 'dotenv/config';
 
+/**
+ * Authentication bootstrap for Keepit MCP runtime modules.
+ *
+ * The exported `setupAuthConfig` function validates the startup environment,
+ * builds the Basic auth token, resolves the authenticated account GUID, and
+ * loads the caller's role and EACL-derived permissions.
+ */
+
 import crypto from 'crypto';
 import type { TEnvType } from './environments.helper';
 import type { IUserACL } from './acl.helper.js';
@@ -69,6 +77,7 @@ function validateStartupEnvironment(
 
 export const setupAuthConfig = async () => {
     try {
+        // Both conditions must be true to enter test mode — NODE_ENV alone is not sufficient.
         if (process.env.NODE_ENV === 'test' && process.env.KEEPIT_MCP_MOCK_AUTH === '1') {
             const authConfig = createTestHarnessAuthConfig();
             validateEnvironment(authConfig);
@@ -84,6 +93,9 @@ export const setupAuthConfig = async () => {
         validateStartupEnvironment(user, pass, keepitEnv);
         // Remove the plaintext password from the environment immediately after encoding so it
         // is not accessible to any code or child processes that inspect process.env later.
+        // Note: the local `pass` variable still holds the value in this function's scope until
+        // it returns, but it is never logged or passed anywhere — only `!!pass` (boolean) is
+        // used below in the info log.
         delete process.env.KEEPIT_PASS;
 
         const authConfig: IAuthConfig = {
@@ -102,7 +114,9 @@ export const setupAuthConfig = async () => {
         validateEnvironment(authConfig);
 
         authConfig.keepitGuid = await getUserId(authConfig);
-        authConfig.userRole = await getUserRole(authConfig);
+        const { role, userAcl } = await getUserRole(authConfig);
+        authConfig.userRole = role;
+        authConfig.userAcl = userAcl;
 
         const { keepitLogin, keepitGuid } = authConfig;
 

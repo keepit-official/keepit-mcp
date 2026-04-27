@@ -3,6 +3,7 @@ import xmlParseOptions from './fast-xml-parser-options.js';
 import { normalizeArrayResponse } from '../helpers/fetch.helper.js';
 import { generateXmlBody } from '../helpers/xml-helper.js';
 import { getHeaders } from '../helpers/make-request.helper.js';
+import { encodePathSegment } from '../helpers/url-path.helper.js';
 import type { IMakeRequestBaseParams } from '../helpers/interfaces/make-request.interface';
 
 const Parser = new XMLParser(xmlParseOptions);
@@ -27,8 +28,9 @@ export const getUser = () => {
 };
 
 export const getUserSettings = (userId: string) => {
+    const encodedUserId = encodePathSegment(userId);
     const requestConfig: IMakeRequestBaseParams = {
-        url: `/users/${userId}`
+        url: `/users/${encodedUserId}`
     };
 
     const applyDataCallback = (response: string): IGetUserResponseObject => {
@@ -46,8 +48,9 @@ export const getUserSettings = (userId: string) => {
 };
 
 export const getSubAccountsList = (userId: string) => {
+    const encodedUserId = encodePathSegment(userId);
     const requestConfig: IMakeRequestBaseParams = {
-        url: `/users/${userId}/users`
+        url: `/users/${encodedUserId}/users`
     };
 
     const applyDataCallback = (response: string): string[] => {
@@ -76,8 +79,9 @@ export const getSubAccountsList = (userId: string) => {
 };
 
 export const getPrimaryContact = (userId: string) => {
+    const encodedUserId = encodePathSegment(userId);
     const requestConfig: IMakeRequestBaseParams = {
-        url: `/users/${userId}/contacts/p`
+        url: `/users/${encodedUserId}/contacts/p`
     };
 
     const applyDataCallback = (response: string): IPrimaryContactResponseObject | null => {
@@ -92,8 +96,9 @@ export const getPrimaryContact = (userId: string) => {
 };
 
 export const getAccountPortfolio = (accountId: string) => {
+    const encodedAccountId = encodePathSegment(accountId);
     const requestConfig: IMakeRequestBaseParams = {
-        url: `/users/${accountId}/portfolio`
+        url: `/users/${encodedAccountId}/portfolio`
     };
 
     const applyDataCallback = (response: string): Array<{ id: string | null; name: string | null; }> => {
@@ -109,8 +114,9 @@ export const getAccountPortfolio = (accountId: string) => {
 };
 
 export const getAccountMfaStatus = (accountId: string) => {
+    const encodedAccountId = encodePathSegment(accountId);
     const requestConfig: IMakeRequestBaseParams = {
-        url: `/users/${accountId}/mfa`
+        url: `/users/${encodedAccountId}/mfa`
     };
 
     const applyDataCallback = (response: string) => {
@@ -133,8 +139,9 @@ export const getAccountMfaStatus = (accountId: string) => {
 };
 
 export const getAccountSsoStatus = (accountId: string) => {
+    const encodedAccountId = encodePathSegment(accountId);
     const requestConfig: IMakeRequestBaseParams = {
-        url: `/users/${accountId}/ssoconfig`
+        url: `/users/${encodedAccountId}/ssoconfig`
     };
 
     const applyDataCallback = (response: string) => {
@@ -161,9 +168,10 @@ export const getAccountSsoStatus = (accountId: string) => {
 };
 
 export const getUserMfaStatus = (accountId: string, username: string) => {
+    const encodedAccountId = encodePathSegment(accountId);
     const encodedUsername = encodeURIComponent(username);
     const requestConfig: IMakeRequestBaseParams = {
-        url: `/users/${accountId}/mfa/${encodedUsername}/status`
+        url: `/users/${encodedAccountId}/mfa/${encodedUsername}/status`
     };
 
     const applyDataCallback = (response: string): Array<{ id: string | null; status: string | null; }> => {
@@ -179,9 +187,10 @@ export const getUserMfaStatus = (accountId: string, username: string) => {
 };
 
 export const getTokenAttributes = (accountId: string, username: string) => {
+    const encodedAccountId = encodePathSegment(accountId);
     const encodedUsername = encodeURIComponent(username);
     const requestConfig: IMakeRequestBaseParams = {
-        url: `/users/${accountId}/tokens/${encodedUsername}/attributes`
+        url: `/users/${encodedAccountId}/tokens/${encodedUsername}/attributes`
     };
 
     const applyDataCallback = (response: string): Array<{ name: string | null; value: string | null; }> => {
@@ -197,8 +206,9 @@ export const getTokenAttributes = (accountId: string, username: string) => {
 };
 
 export const getAccountResources = (accountId: string) => {
+    const encodedAccountId = encodePathSegment(accountId);
     const requestConfig: IMakeRequestBaseParams = {
-        url: `/users/${accountId}/resources`
+        url: `/users/${encodedAccountId}/resources`
     };
 
     const applyDataCallback = (response: string) => {
@@ -222,8 +232,9 @@ export const getAccountMaxUsageTotal = (
     accountId: string,
     filter: Record<string, unknown>
 ) => {
+    const encodedAccountId = encodePathSegment(accountId);
     const requestConfig: IMakeRequestBaseParams = {
-        url: `/users/${accountId}/resources/max_usage/total`,
+        url: `/users/${encodedAccountId}/resources/max_usage/total`,
         method: 'PUT',
         headers: getHeaders('v4'),
         retrySafe: true,

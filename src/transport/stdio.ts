@@ -1,3 +1,9 @@
+/**
+ * Stdio transport bootstrapper.
+ *
+ * This module creates the MCP stdio transport, connects the initialized
+ * server, and performs process-level shutdown handling for SIGINT/SIGTERM.
+ */
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { createMCPServer } from '../server/mcp-server.js';
 

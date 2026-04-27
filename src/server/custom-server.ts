@@ -1,3 +1,10 @@
+/**
+ * Concrete MCP server wrapper for Keepit.
+ *
+ * This class resolves auth once, filters tools by ACL, registers only the
+ * allowed tool set, and keeps initialization idempotent for test and runtime
+ * callers.
+ */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { logger } from '../logger/logger.js';
 import { getToolConfig, getToolCallback } from '../helpers/mcp.helper.js';

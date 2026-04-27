@@ -1,6 +1,8 @@
 # Keepit MSP MCP
 
 ## About
+This repository is maintained as an independent fork intended to help MSPs get started with an MSP-oriented Keepit MCP. It is not documented here as an official Keepit support channel, and this fork does not promise ongoing maintenance or response SLAs.
+
 Keepit MSP MCP is Keepit's Model Context Protocol (MCP) server for use with Claude Desktop or other applications that support
 local stdio-based MCP servers. Keepit MSP MCP's tools help you monitor, manage, and secure your Keepit estate using AI. 
 
@@ -15,6 +17,18 @@ Example queries:
 
 To get a sense of what's possible with Keepit MSP MCP, we've provided a comprehensive set of example prompts in [PROMPTS.md](PROMPTS.md).
 
+For contributor-facing codebase documentation, see [docs/DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md).
+
+## Fork Status
+
+This codebase is documented here as an independent fork focused on MSP use cases and onboarding. It is provided to help MSP operators get started with an MSP MCP implementation.
+
+Current expectations documented for this fork:
+
+- The fork is intended as a starting point for MSP workflows rather than a guaranteed long-term supported product.
+- Keepit may choose to adopt ideas or functionality from it, but that is not guaranteed by this repository.
+- Issue review and fixes may happen on a best-effort basis, but this README does not promise ongoing support or maintenance timelines.
+
 ## What is MCP?
 
 The Model Context Protocol (MCP) is a standardized way for AI assistants like Claude to interact with external tools and data sources. MCP servers act as bridges between an LLM and external services, allowing the LLM to:
@@ -26,11 +40,13 @@ The Model Context Protocol (MCP) is a standardized way for AI assistants like Cl
 Claude Desktop can connect to multiple MCP servers simultaneously, each providing access to different services. Microsoft has added support for MCP to VSCode and Copilot Studio and is adding MCP tools as first-class apps in an upcoming release of Windows 11. Many other tools can consume MCP servers as well.
 
 ## Safety and security
-Keepit MCP runs as a local MCP server on your local machine. As you can see from inspecting the code, it does not have access to the local filesystem or machine. However,
+Keepit MCP runs as a local MCP server on your local machine. It does not expose filesystem or shell tools through MCP, so the LLM cannot read local files or execute local commands through this server alone. However,
 depending on what other MCP servers you have configured, the LLM you use may have access to local or remote files (including through Google Drive or OneDrive),
 the ability to send mail, and other capabilities. We have put guardrails in place (strict type safety, input and schema validation, etc.), but the ultimate protection
 for your Keepit account is to safeguard the API token you use for running Keepit MCP, including making sure that it has the least privilege necessary to run the tools you
 want to use.
+
+For transparency: development tooling and standalone logging may write a local `keepit-msp-mcp.log` file outside stdio-MCP mode, and the optional HTTP proxy is intended for local development only.
 
 You should also note that it is possible that the LLM you use may take actions you didn't explicitly command. Be careful when testing prompts to ensure that an over-eager LLM construction won't result in an action that damages important data. 
 
@@ -63,7 +79,7 @@ Follow the steps below to set up the project environment:
 
 2. **Clone the repository:**
    ```bash
-   git clone https://github.com/keepit-official/keepit-msp-mcp.git
+   git clone https://github.com/acgdickie/keepit-msp-mcp.git
    
 3. After cloning the repository, open the project folder:
     ```bash
@@ -106,6 +122,11 @@ This project can be used for:
 ### Run the Keepit MSP MCP Server in Production Mode: 
   - We highly recommend that you read our [security recommendations](./SECURITY.md).
 
+### Support Expectations
+- This fork is shared as a practical MSP starter implementation.
+- No ongoing support commitment or response SLA is promised by this repository.
+- If you use it in production, review the code, validate behavior in your own environment, and decide what internal support/ownership model you need around it.
+
 ### Healthcheck
 - Run the startup validation and auth self-check:
   ```bash
@@ -122,8 +143,17 @@ This project can be used for:
   ```bash
   npm run smoke:live
   ```
+- `smoke:ci` builds the repo before running the smoke checks.
+- `smoke:live` also accepts `KEEPIT_USER`, `KEEPIT_PASS`, and `KEEPIT_ENV` from the current process environment. If they are already exported, a local `.env` file is not required.
 - `smoke:live` is intentionally broader than CI. It exercises real account, connector, job, audit, snapshot, and MSP flows and may skip tenant-specific checks when no client account or connector is discoverable.
 - Optional override: set `SMOKE_CONNECTOR_GUID` when you want the live smoke to target a specific connector.
+
+### Review / Release Verification
+- Run the full local verification path with:
+  ```bash
+  npm run release:check
+  ```
+- The current implementation runs build, manifest sync, lint, unit tests, CI smoke tests, and MCPB packaging in sequence.
 
 ### Developing the Keepit MSP MCP server
 
@@ -151,7 +181,8 @@ This setup is always available during development and enables us to **debug and 
     LOCAL_PORT=5000
     ```
     - **Note:**  The LOCAL_PORT field is optional. If not specified, the server will run on http://127.0.0.1:3000
-    - **Note:** `KEEPIT_DISABLE_ANALYTICS` is optional. Telemetry is enabled by default. Set it to `1`, `true`, or `yes` to disable it.
+    - **Note:** `KEEPIT_DISABLE_ANALYTICS` is optional. Telemetry is enabled by default for direct/local runs. Set it to `1`, `true`, or `yes` to disable it.
+    - **Note:** Packaged installs also expose a telemetry toggle in extension settings.
    
   - Run the following command to start the development server:
     ```bash
@@ -243,7 +274,10 @@ For more information about MCP Inspector, see the [official MCP documentation](h
 
 ## Operational Notes
 
-- `KEEPIT_DISABLE_ANALYTICS` is optional and defaults to telemetry enabled. Set `KEEPIT_DISABLE_ANALYTICS=1` to opt out.
+- `KEEPIT_DISABLE_ANALYTICS` is optional and defaults to telemetry enabled for direct/local runs. Set `KEEPIT_DISABLE_ANALYTICS=1` to opt out.
+- Packaged installs expose the same preference through extension settings.
+- `npm test` runs the unit suite through the same `test:unit` path used by CI-friendly local verification.
+- `npm audit --omit=dev` is the recommended runtime dependency check. The remaining `npm audit` warnings currently come from dev-only packaging/tooling dependencies and are not part of the shipped production dependency set.
 - For `get_audit_log_history`, each request returns at most `500` records, and `limit` defaults to `500`.
 - For single-account audit queries, when more audit history is available the response returns `pagination.nextOffset`. Repeat the same query with that `offset` to continue with the next window.
 - Broad multi-account audit queries do not support continuation. If a broad query is capped or truncated, narrow the query to one account to retrieve additional records reliably.

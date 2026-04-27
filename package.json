@@ -5,6 +5,10 @@
   "license": "MIT",
   "author": "Keepit",
   "homepage": "https://www.keepit.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/acgdickie/keepit-msp-mcp.git"
+  },
   "main": "./build/main.js",
   "type": "module",
   "keywords": [
@@ -25,8 +29,9 @@
     "lint": "eslint --fix src",
     "lint:check": "eslint src",
     "release:check": "node scripts/release-check.mjs",
+    "test": "npm run test:unit",
     "test:unit": "npm run build && node --test tests/**/*.test.mjs",
-    "smoke:ci": "node scripts/ci-smoke.mjs",
+    "smoke:ci": "npm run build && node scripts/ci-smoke.mjs",
     "smoke:live": "npm run build && node scripts/live-smoke.mjs"
   },
   "dependencies": {

@@ -1,13 +1,21 @@
+/**
+ * Job tool orchestration layer.
+ *
+ * The current implementation validates job-history requests, resolves the
+ * target connector, retrieves active jobs directly, and fans out history
+ * requests in bounded 24-hour chunks.
+ */
 import { getJobs, getJobsHistory } from '../../api/jobs-api.js';
 import { JobHistorySchema } from '../../utils/schemas/requests/job.schemas.js';
 import { logger } from '../../logger/logger.js';
 import { makeRequest } from '../../helpers/make-request.helper.js';
+import { parseToolArgsOrThrow } from '../../helpers/tool.helper.js';
 import { subtractPeriod, TIME_IN_MS } from '../../helpers/date.helper.js';
 import { validateAndSanitizeConnectorId } from '../../utils/sanitizers/connector-id.sanitizer.js';
 import { resolveScopedConnector } from '../connector/connectors-tools.helper.js';
 import type { IAuthConfig } from '../../helpers/auth-config.helper.js';
 import type { IJob } from '../../api/api-types/jobs-api.js';
-import type { ToolArguments, ToolParams, ToolResult } from '../tools.interfaces.js';
+import type { ToolParams, ToolResult } from '../tools.interfaces.js';
 import type { z } from 'zod';
 
 type JobHistoryRequest = z.infer<typeof JobHistorySchema>;
@@ -15,38 +23,18 @@ type JobHistoryRequest = z.infer<typeof JobHistorySchema>;
 const JOBS_FETCH_CONCURRENCY = 5;
 
 export const getValidatedJobArguments = (toolParams: ToolParams): JobHistoryRequest => {
-    const requestArguments = {
+    const parsed = parseToolArgsOrThrow(JobHistorySchema, {
         guid: toolParams.arguments?.guid,
         account_id: toolParams.arguments?.account_id,
         scope: toolParams.arguments?.scope,
         duration: toolParams.arguments?.duration,
         startTime: toolParams.arguments?.startTime,
         endTime: toolParams.arguments?.endTime
-    };
-
-    return validateJobRequest(requestArguments);
-};
-
-const validateJobRequest = (request: ToolArguments): JobHistoryRequest => {
-    const validationResult = JobHistorySchema.safeParse(request);
-
-    if (!validationResult.success) {
-        const errorMessages = validationResult.error.errors.map(err => {
-            const path = err.path.length > 0 ? `${err.path.join('.')}: ` : '';
-            return `${path}${err.message}`;
-        }).join('; ');
-        throw new Error(`Invalid configuration: ${errorMessages}`);
-    }
-
-    const { guid, account_id, scope, duration, startTime, endTime } = validationResult.data;
+    });
 
     return {
-        guid: validateAndSanitizeConnectorId(guid),
-        account_id,
-        scope,
-        duration,
-        startTime,
-        endTime
+        ...parsed,
+        guid: validateAndSanitizeConnectorId(parsed.guid)
     };
 };
 
@@ -128,10 +116,19 @@ export const handleGetJobHistory = async (request: JobHistoryRequest, authConfig
             }
         }
 
+        // Adjacent 24-hour chunks share boundary timestamps, so a job dispatched exactly at a
+        // chunk boundary can appear in two consecutive responses. Deduplicate by guid.
+        const seenGuids = new Set<string>();
+        const dedupedResults = allResults.filter(job => {
+            if (seenGuids.has(job.guid)) return false;
+            seenGuids.add(job.guid);
+            return true;
+        });
+
         return {
-            result: allResults,
+            result: dedupedResults,
             success: true,
-            messages: [`Found ${allResults.length} jobs in history for ${connector.guid} connector on account ${connector.account_id} from ${startTimeISO} to ${endTimeISO}`]
+            messages: [`Found ${dedupedResults.length} jobs in history for ${connector.guid} connector on account ${connector.account_id} from ${startTimeISO} to ${endTimeISO}`]
         };
     } catch (error) {
         logger.error('[JOBS] Failed to get jobs', error);

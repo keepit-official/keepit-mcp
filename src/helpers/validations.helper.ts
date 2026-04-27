@@ -25,7 +25,7 @@ export function validateEnvironment(authConfig: IAuthConfig): void {
     // Validate authentication token format (Base64 characters only, minimum 8 chars)
     const tokenPattern = /^[A-Za-z0-9+/=]{8,}$/;
     if (!tokenPattern.test(authToken)) {
-        throw new Error('Invalid authentication token format');
+        throw new Error('KEEPIT_USER or KEEPIT_PASS contains characters that cannot be Base64-encoded. Verify neither value contains whitespace or non-ASCII characters.');
     }
 }
 

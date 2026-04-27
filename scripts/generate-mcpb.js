@@ -1,3 +1,10 @@
+/**
+ * Packaging entrypoint used by `npm run generate-mcpb`.
+ *
+ * The script rebuilds the project, syncs manifest metadata from the runtime
+ * tool registry, prepares an `export/` folder with production dependencies,
+ * and then packs the result into `keepit-msp-mcp.mcpb`.
+ */
 import { execSync } from "child_process";
 
 const run = (cmd) => {

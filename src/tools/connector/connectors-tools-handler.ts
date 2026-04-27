@@ -1,13 +1,32 @@
 import { createToolErrorResponse, createToolResponse } from '../../helpers/tool.helper.js';
-import { findConnectors, getConnectorHealth, getValidatedConnectorHealthArguments, getValidatedConnectorListArguments, getConnectors } from './connectors-tools.helper.js';
+import { findConnectors, getConnectorByGuid, getConnectorHealth, getValidatedConnectorByGuidArguments, getValidatedConnectorHealthArguments, getValidatedConnectorListArguments, getConnectors, type IScopedConnector } from './connectors-tools.helper.js';
 import type { CallToolRequest } from '@modelcontextprotocol/sdk/types.js';
 import type { IAuthConfig } from '../../helpers/auth-config.helper.js';
 import type { ToolMetadata, ToolHandlers } from '../tools.interfaces.js';
 
+type ConnectorToolResponse = { connector: IScopedConnector; };
 type ConnectorsToolResponse = Record<'connectors', IConnector[]>;
 type HealthToolResponse = { connector: IConnector; health: string; };
 
 export const CONNECTOR_TOOLS_HANDLER: ToolHandlers = {
+    get_connector: async (request: CallToolRequest, authConfig: IAuthConfig) => {
+        try {
+            const toolArguments = getValidatedConnectorByGuidArguments(request.params);
+            const { success, messages, result: connector } = await getConnectorByGuid(authConfig, toolArguments);
+
+            const metadata: ToolMetadata = {
+                tool: 'get_connector',
+                success,
+                messages,
+                guid: connector.guid,
+                account_id: connector.account_id
+            };
+
+            return createToolResponse<ConnectorToolResponse>({ connector }, metadata);
+        } catch (error) {
+            return createToolErrorResponse('get_connector', error);
+        }
+    },
     get_cloud_connectors: async (_, authConfig) => {
         try {
             const toolArguments = getValidatedConnectorListArguments(_.params);

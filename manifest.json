@@ -20,7 +20,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://gitlab.off.keepit.com/development/keepit-msp-mcp-server.git"
+    "url": "https://github.com/acgdickie/keepit-msp-mcp.git"
   },
   "homepage": "https://www.keepit.com",
   "icon": "public/keepit_logo.png",
@@ -36,7 +36,8 @@
         "NODE_ENV": "production",
         "KEEPIT_USER": "${user_config.keepit_username}",
         "KEEPIT_PASS": "${user_config.keepit_password}",
-        "KEEPIT_ENV": "${user_config.keepit_datacenter}"
+        "KEEPIT_ENV": "${user_config.keepit_datacenter}",
+        "KEEPIT_DISABLE_ANALYTICS": "${user_config.keepit_disable_analytics}"
       }
     }
   },
@@ -146,6 +147,10 @@
       "description": "Get a list of backup and/or restore jobs for a connector"
     },
     {
+      "name": "get_connector",
+      "description": "Retrieve a single connector by its exact GUID. Returns one result or an error if the GUID is not found in scope. Provide account_id to narrow the search to one account and avoid scanning the full tree."
+    },
+    {
       "name": "get_cloud_connectors",
       "description": "List connectors in the requested account scope. Use this to discover connector GUIDs before calling health or summary tools. When account_id is omitted, the default scope is the authenticated/root account plus its direct child accounts."
     },
@@ -206,6 +211,13 @@
       "description": "Keepit datacenter region (dk-co, us-dc, eu-dc, uk-ld, ca-tr, au-sy, de-fr, ch-zh)",
       "required": true,
       "default": "dk-co"
+    },
+    "keepit_disable_analytics": {
+      "type": "boolean",
+      "title": "Disable telemetry",
+      "description": "Disable Keepit MCP telemetry for this installed extension.",
+      "required": false,
+      "default": false
     }
   }
 }

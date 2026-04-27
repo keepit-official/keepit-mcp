@@ -1,16 +1,25 @@
-import { ConnectorHealthRequestSchema, ConnectorListRequestSchema } from '../../utils/schemas/requests/connector.schemas.js';
+/**
+ * Connector tool orchestration layer.
+ *
+ * This module validates connector-oriented arguments, resolves scope-aware
+ * connector candidates, and provides shared connector discovery and health
+ * lookup helpers for connector, jobs, and snapshot tools.
+ */
+import { ConnectorByGuidRequestSchema, ConnectorHealthRequestSchema, ConnectorListRequestSchema } from '../../utils/schemas/requests/connector.schemas.js';
 import { getConnectorHealthSettings, getConnectorsSettings } from '../../api/connectors-api.js';
 import { buildScopeMeta, getAccountsForScope, mapWithConcurrency, memoizeRequest } from '../account/account-context.helper.js';
 import { CONNECTOR_TYPE_LABELS } from '../../helpers/connector-types.helper.js';
 import { logger } from '../../logger/logger.js';
 import { makeRequest } from '../../helpers/make-request.helper.js';
+import { parseToolArgsOrThrow } from '../../helpers/tool.helper.js';
 import type { IAuthConfig } from '../../helpers/auth-config.helper.js';
-import type { ToolArguments, ToolParams, ToolResult } from '../tools.interfaces.js';
+import type { ToolParams, ToolResult } from '../tools.interfaces.js';
 import type { z } from 'zod';
 
+type ConnectorByGuidRequest = z.infer<typeof ConnectorByGuidRequestSchema>;
 type ConnectorHealthRequest = z.infer<typeof ConnectorHealthRequestSchema>;
 type ConnectorListRequest = z.infer<typeof ConnectorListRequestSchema>;
-type IScopedConnector = IConnector & {
+export type IScopedConnector = IConnector & {
     account_id: string;
     account_name: string | null;
     type_label?: string | null;
@@ -19,18 +28,6 @@ type IScopedConnector = IConnector & {
 const normalizeConnectorTarget = (value: unknown): string | undefined => 
     typeof value === 'string' && value.trim() ? value.trim() : undefined
 ;
-
-const validateConnectorRequest = <T>(schema: { safeParse: (value: unknown) => { success: boolean; data?: unknown; error?: { errors: Array<{ path: Array<string | number>; message: string; }>; }; }; }, request: ToolArguments): T => {
-    const validationResult = schema.safeParse(request);
-    if (!validationResult.success) {
-        const errorMessages = (validationResult.error?.errors || [])
-            .map((err) => `${err.path.join('.')}: ${err.message}`)
-            .join('; ');
-        throw new Error(`Invalid configuration: ${errorMessages}`);
-    }
-
-    return validationResult.data as T;
-};
 
 export const parseScopedConnectorArgs = (toolParams?: ToolParams, options: { requireTarget?: boolean; } = {}) => {
     const argumentsObject = toolParams?.arguments || {};
@@ -56,8 +53,16 @@ export const parseScopedConnectorArgs = (toolParams?: ToolParams, options: { req
     };
 };
 
+export const getValidatedConnectorByGuidArguments = (toolParams: ToolParams): ConnectorByGuidRequest => {
+    return parseToolArgsOrThrow(ConnectorByGuidRequestSchema, {
+        guid: toolParams.arguments?.guid,
+        account_id: toolParams.arguments?.account_id,
+        scope: toolParams.arguments?.scope
+    });
+};
+
 export const getValidatedConnectorListArguments = (toolParams: ToolParams): ConnectorListRequest => {
-    return validateConnectorRequest(ConnectorListRequestSchema, {
+    return parseToolArgsOrThrow(ConnectorListRequestSchema, {
         account_id: toolParams.arguments?.account_id,
         scope: toolParams.arguments?.scope,
         query: toolParams.arguments?.query
@@ -66,7 +71,7 @@ export const getValidatedConnectorListArguments = (toolParams: ToolParams): Conn
 
 export const getValidatedConnectorHealthArguments = (toolParams: ToolParams): ConnectorHealthRequest => {
     const parsed = parseScopedConnectorArgs(toolParams, { requireTarget: true });
-    return validateConnectorRequest(ConnectorHealthRequestSchema, parsed);
+    return parseToolArgsOrThrow(ConnectorHealthRequestSchema, parsed);
 };
 
 const getConnectorsForAccount = async (
@@ -268,6 +273,37 @@ export const resolveScopedConnector = async (
         account_id: request.account_id,
         scope: request.scope
     });
+};
+
+export const getConnectorByGuid = async (
+    authConfig: IAuthConfig,
+    options: ConnectorByGuidRequest
+): Promise<ToolResult<IScopedConnector>> => {
+    try {
+        const scoped = await getScopedConnectors(authConfig, {
+            accountId: options.account_id,
+            scope: options.scope,
+            defaultScope: 'all',
+            exactOnAccountId: true
+        });
+
+        const connector = scoped.connectors.find((c) => c.guid === options.guid);
+        if (!connector) {
+            throw new Error(`Connector with GUID "${options.guid}" not found. Verify the GUID or widen the scope.`);
+        }
+
+        logger.info(`[CONNECTOR] Resolved connector by GUID: ${connector.guid} on ${connector.account_id}`);
+
+        return {
+            result: connector,
+            success: true,
+            messages: [`Found connector "${connector.name}" (${connector.guid})`].concat(scoped.warnings),
+            meta: buildScopeMeta('get_connector', scoped.resolvedAccounts, { guid: options.guid })
+        } as ToolResult<IScopedConnector> & { meta: Record<string, unknown>; };
+    } catch (error) {
+        logger.error('[CONNECTOR] Error getting connector by GUID:', error);
+        throw error;
+    }
 };
 
 export const getConnectorHealth = async (

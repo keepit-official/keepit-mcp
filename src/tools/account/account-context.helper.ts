@@ -1,7 +1,15 @@
+/**
+ * Shared account-scope resolution utilities.
+ *
+ * The account toolset, connector helpers, and audit helpers use this module to
+ * traverse account trees, resolve scopes, cache repeated account lookups, and
+ * cap parallelism for fan-out requests.
+ */
 import { getAccountPortfolio, getPrimaryContact, getSubAccountsList, getUserSettings } from '../../api/account-api.js';
 import { getTokens } from '../../api/authentication-api.js';
 import { makeRequest } from '../../helpers/make-request.helper.js';
 import { logger } from '../../logger/logger.js';
+import { validateAccountId } from '../../utils/sanitizers/account-id.sanitizer.js';
 import type { IAuthConfig } from '../../helpers/auth-config.helper.js';
 
 const DEFAULT_CONCURRENCY = 5;
@@ -75,6 +83,9 @@ export const memoizeRequest = async <T>(
     }
 
     if (!cache.has(key)) {
+        // cache.set executes synchronously before the first await, so no concurrent caller
+        // can slip between the has() check and the set() in Node.js's single-threaded event
+        // loop. The stored promise is shared by all subsequent callers that hit this key.
         cache.set(key, Promise.resolve().then(loader).catch((err) => {
             // Evict on failure so a subsequent call can retry rather than permanently serving
             // the cached rejection to all callers that share this cache key.
@@ -198,8 +209,8 @@ const getProductName = async (
 
         const match = Array.isArray(products) ? products.find((product) => product?.id === productId) : null;
         return match?.name || null;
-    } catch {
-        logger.info(`[ACCOUNT_CONTEXT] No portfolio product match available for ${productId} via ${portfolioAccountId}`);
+    } catch (error) {
+        logger.warn(`[ACCOUNT_CONTEXT] Failed to load portfolio for ${portfolioAccountId} (product ${productId}): ${error instanceof Error ? error.message : String(error)}`);
         return null;
     }
 };
@@ -217,8 +228,8 @@ export const getPrimaryContactDetails = async (
         });
 
         return response ? mapPrimaryContact(response) : null;
-    } catch {
-        logger.info(`[ACCOUNT_CONTEXT] No primary contact available for ${accountId}`);
+    } catch (error) {
+        logger.warn(`[ACCOUNT_CONTEXT] Failed to load primary contact for ${accountId}: ${error instanceof Error ? error.message : String(error)}`);
         return null;
     }
 };
@@ -376,6 +387,10 @@ export const resolveAccountIds = async (
         cache?: TRequestCache;
     } = {}
 ): Promise<TResolvedAccountIds> => {
+    if (options.accountId) {
+        validateAccountId(options.accountId);
+    }
+
     const hasAccountId = !!options.accountId;
     const scope = getEffectiveScope({
         scope: options.scope,

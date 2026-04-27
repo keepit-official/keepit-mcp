@@ -376,6 +376,78 @@ test('account scope resolution uses aliases and exact-on-account-id behavior', a
   assert.equal(getEffectiveScope({ hasAccountId: true, exactOnAccountId: false, defaultScope: 'all' }), 'all');
 });
 
+test('get_connector returns the matching connector by exact GUID', async () => {
+  const { getConnectorByGuid } = await importFromBuild(path.join('tools', 'connector', 'connectors-tools.helper.js'));
+
+  const authConfig = {
+    keepitLogin: 'user@example.com',
+    keepitEnv: 'au-sy',
+    keepitGuid: 'root-account',
+    sessionId: 'session-id',
+    userRole: 'Admin',
+    authToken: 'dGVzdA==',
+    userAcl: { eacl: '', aclObject: {} }
+  };
+
+  const targetGuid = 'aaaaaa-bbbbbb-cccccc';
+
+  const response = await withFetchMock(async (url) => {
+    const target = new URL(url);
+    if (target.pathname === '/users/root-account') {
+      return new Response(buildUserXml('root-account', 'Root Account'), { status: 200 });
+    }
+    if (target.pathname === '/users/root-account/contacts/p') {
+      return new Response('<contact><fullname>Admin</fullname></contact>', { status: 200 });
+    }
+    if (target.pathname === '/users/root-account/devices') {
+      return new Response(
+        `<devices><cloud><guid>${targetGuid}</guid><name>My Connector</name><type>o365-admin</type><created>2026-01-01T00:00:00Z</created></cloud></devices>`,
+        { status: 200 }
+      );
+    }
+    throw new Error(`Unexpected fetch URL: ${String(url)}`);
+  }, () => getConnectorByGuid(authConfig, { guid: targetGuid, account_id: 'root-account', scope: 'account' }));
+
+  assert.equal(response.success, true);
+  assert.equal(response.result.guid, targetGuid);
+  assert.equal(response.result.name, 'My Connector');
+  assert.equal(response.result.account_id, 'root-account');
+});
+
+test('get_connector throws when the GUID is not present in scope', async () => {
+  const { getConnectorByGuid } = await importFromBuild(path.join('tools', 'connector', 'connectors-tools.helper.js'));
+
+  const authConfig = {
+    keepitLogin: 'user@example.com',
+    keepitEnv: 'au-sy',
+    keepitGuid: 'root-account',
+    sessionId: 'session-id',
+    userRole: 'Admin',
+    authToken: 'dGVzdA==',
+    userAcl: { eacl: '', aclObject: {} }
+  };
+
+  await assert.rejects(
+    () => withFetchMock(async (url) => {
+      const target = new URL(url);
+      if (target.pathname === '/users/root-account') {
+        return new Response(buildUserXml('root-account', 'Root Account'), { status: 200 });
+      }
+      if (target.pathname === '/users/root-account/contacts/p') {
+        return new Response('<contact><fullname>Admin</fullname></contact>', { status: 200 });
+      }
+      if (target.pathname === '/users/root-account/devices') {
+        return new Response(
+          '<devices><cloud><guid>dddddd-eeeeee-ffffff</guid><name>Other Connector</name><type>gsuite</type><created>2026-01-01T00:00:00Z</created></cloud></devices>',
+          { status: 200 }
+        );
+      }
+      throw new Error(`Unexpected fetch URL: ${String(url)}`);
+    }, () => getConnectorByGuid(authConfig, { guid: 'aaaaaa-bbbbbb-cccccc', account_id: 'root-account', scope: 'account' })),
+    (error) => error instanceof Error && error.message.includes('not found')
+  );
+});
+
 test('ACL filtering only registers tools allowed by the resolved permissions', async () => {
   const { getAllowedTools } = await importFromBuild(path.join('helpers', 'acl.helper.js'));
 

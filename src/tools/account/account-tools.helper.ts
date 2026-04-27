@@ -1,5 +1,11 @@
+/**
+ * Account and MSP orchestration layer.
+ *
+ * This module aggregates low-level API calls into user-facing summaries for
+ * accounts, users, tokens, usage, connectors, and MSP-wide rollups.
+ */
 import { findUserToken } from '../../helpers/user-role.helper.js';
-import { generateEaclPermissions } from '../../helpers/acl.helper.js';
+import { generateEaclPermissions, type IUserACL } from '../../helpers/acl.helper.js';
 import { getTokenByGuid, getTokens } from '../../api/authentication-api.js';
 import {
     getAccountMaxUsageTotal,
@@ -12,6 +18,8 @@ import {
 } from '../../api/account-api.js';
 import { logger } from '../../logger/logger.js';
 import { makeRequest } from '../../helpers/make-request.helper.js';
+import { parseISO8601Duration } from '../../helpers/date.helper.js';
+import { validateAccountId } from '../../utils/sanitizers/account-id.sanitizer.js';
 import type { IAuthConfig } from '../../helpers/auth-config.helper.js';
 import type { ToolResult } from '../tools.interfaces.js';
 import {
@@ -68,17 +76,19 @@ export const getUserId = async (authConfig: IAuthConfig): Promise<string> => {
     }
 };
 
-export const getUserRole = async (authConfig: IAuthConfig): Promise<string> => {
+export const getUserRole = async (authConfig: IAuthConfig): Promise<{ role: string; userAcl: IUserACL; }> => {
     try {
         const { requestConfig, applyDataCallback } = getTokens(authConfig.keepitGuid, { secondary: 1 });
         const response = await makeRequest<TTokenLike[]>(requestConfig, authConfig, applyDataCallback);
         const userToken = findUserToken(response as IAuthToken[], authConfig.keepitLogin);
         logger.info(`User role set: ${userToken.acl}`);
-        authConfig.userAcl = {
-            eacl: userToken.eacl,
-            aclObject: { ...generateEaclPermissions(userToken.eacl) }
+        return {
+            role: userToken.acl,
+            userAcl: {
+                eacl: userToken.eacl,
+                aclObject: { ...generateEaclPermissions(userToken.eacl) }
+            }
         };
-        return userToken.acl;
     } catch (error) {
         logger.error('[ROLE_INIT_ERROR] Failed to resolve user role and ACL during startup', error);
         throw new Error('Failed to resolve user role and ACL during startup');
@@ -121,19 +131,11 @@ const summarizeNotificationSetting = (attributes: Array<{ name?: string | null; 
 };
 
 const parseIsoDuration = (duration: string | null | undefined) => {
-    const match = /^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/i.exec(String(duration || '').trim());
-    if (!match) {
+    try {
+        return parseISO8601Duration(String(duration ?? '').trim());
+    } catch {
         return null;
     }
-    return {
-        years: Number(match[1] || 0),
-        months: Number(match[2] || 0),
-        weeks: Number(match[3] || 0),
-        days: Number(match[4] || 0),
-        hours: Number(match[5] || 0),
-        minutes: Number(match[6] || 0),
-        seconds: Number(match[7] || 0)
-    };
 };
 
 const deriveExpiryTimestamp = (created: string | null | undefined, lifetime: string | null | undefined): string | null => {
@@ -274,10 +276,10 @@ const buildPeriodWorkloads = async (
     return workloads;
 };
 
-const formatLocalDate = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+const formatUtcDate = (date: Date) => {
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
 };
 
@@ -289,7 +291,7 @@ const parseDateOnly = (value: string | undefined, fieldName: string): string | n
     if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
         throw new Error(`${fieldName} must use YYYY-MM-DD format`);
     }
-    const date = new Date(`${normalized}T00:00:00`);
+    const date = new Date(`${normalized}T00:00:00Z`);
     if (Number.isNaN(date.getTime())) {
         throw new Error(`${fieldName} is not a valid date`);
     }
@@ -298,12 +300,12 @@ const parseDateOnly = (value: string | undefined, fieldName: string): string | n
 
 const getDefaultLastMonthRange = () => {
     const now = new Date();
-    const firstDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const firstDayOfCurrentMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
     const lastDayOfPreviousMonth = new Date(firstDayOfCurrentMonth.getTime() - 24 * 60 * 60 * 1000);
-    const firstDayOfPreviousMonth = new Date(lastDayOfPreviousMonth.getFullYear(), lastDayOfPreviousMonth.getMonth(), 1);
+    const firstDayOfPreviousMonth = new Date(Date.UTC(lastDayOfPreviousMonth.getUTCFullYear(), lastDayOfPreviousMonth.getUTCMonth(), 1));
     return {
-        from: formatLocalDate(firstDayOfPreviousMonth),
-        to: formatLocalDate(lastDayOfPreviousMonth),
+        from: formatUtcDate(firstDayOfPreviousMonth),
+        to: formatUtcDate(lastDayOfPreviousMonth),
         mode: 'last_month'
     };
 };
@@ -311,7 +313,7 @@ const getDefaultLastMonthRange = () => {
 const resolveUsageDateRange = (fromDate?: string, toDate?: string) => {
     const normalizedFrom = parseDateOnly(fromDate, 'from_date');
     const normalizedTo = parseDateOnly(toDate, 'to_date');
-    const today = formatLocalDate(new Date());
+    const today = formatUtcDate(new Date());
     if (normalizedFrom && normalizedTo) {
         if (normalizedFrom > normalizedTo) {
             throw new Error('from_date must be on or before to_date');
@@ -462,6 +464,9 @@ const aggregateMspCurrentWorkloads = (results: Array<Record<string, unknown>>, w
 };
 
 const getAccountContext = async (authConfig: IAuthConfig, accountId?: string) => {
+    if (accountId) {
+        validateAccountId(accountId);
+    }
     const resolvedAccountId = accountId || authConfig.keepitGuid;
     const cache = createRequestCache();
     const account = await getAccountDetails(authConfig, resolvedAccountId, cache);
@@ -618,6 +623,7 @@ export const getAccountContactInfo = async (authConfig: IAuthConfig, accountId?:
 };
 
 export const getAccountMfaInfo = async (authConfig: IAuthConfig, accountId?: string): Promise<TToolResult<Record<string, unknown>>> => {
+    if (accountId) validateAccountId(accountId);
     const resolvedAccountId = accountId || authConfig.keepitGuid;
     const mfa = await getAccountMfaSummary(authConfig, resolvedAccountId);
     return withMeta({ account_id: resolvedAccountId, mfa }, ['Account MFA information retrieved successfully'], {
@@ -628,6 +634,7 @@ export const getAccountMfaInfo = async (authConfig: IAuthConfig, accountId?: str
 };
 
 export const getAccountSsoInfo = async (authConfig: IAuthConfig, accountId?: string): Promise<TToolResult<Record<string, unknown>>> => {
+    if (accountId) validateAccountId(accountId);
     const resolvedAccountId = accountId || authConfig.keepitGuid;
     const sso = await getAccountSsoSummary(authConfig, resolvedAccountId);
     return withMeta({ account_id: resolvedAccountId, sso }, ['Account SSO information retrieved successfully'], {
@@ -641,6 +648,7 @@ export const getUserMfaInfo = async (
     authConfig: IAuthConfig,
     options: { accountId?: string; username?: string; }
 ): Promise<TToolResult<Record<string, unknown>>> => {
+    if (options.accountId) validateAccountId(options.accountId);
     const resolvedAccountId = options.accountId || authConfig.keepitGuid;
     const username = options.username;
     if (!username) {
@@ -659,6 +667,7 @@ export const getUserMfaInfo = async (
 };
 
 export const listAccountUsers = async (authConfig: IAuthConfig, accountId?: string): Promise<TToolResult<Record<string, unknown>>> => {
+    if (accountId) validateAccountId(accountId);
     const resolvedAccountId = accountId || authConfig.keepitGuid;
     const { requestConfig, applyDataCallback } = getTokens(resolvedAccountId);
     const response = await makeRequest<TTokenLike[]>(requestConfig, authConfig, applyDataCallback);
@@ -682,6 +691,7 @@ export const listAccountUsers = async (authConfig: IAuthConfig, accountId?: stri
 };
 
 export const listAccountTokens = async (authConfig: IAuthConfig, accountId?: string): Promise<TToolResult<Record<string, unknown>>> => {
+    if (accountId) validateAccountId(accountId);
     const resolvedAccountId = accountId || authConfig.keepitGuid;
     const { requestConfig, applyDataCallback } = getTokens(resolvedAccountId, { secondary: 1 });
     const response = await makeRequest<TTokenLike[]>(requestConfig, authConfig, applyDataCallback);

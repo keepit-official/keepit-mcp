@@ -15,6 +15,9 @@ const xmlParseOptions = {
     numberParseOptions: {
         leadingZeros: false,
         hex: false,
+        // /\d/ matches any string that contains at least one digit, which is intentionally broad:
+        // it prevents fast-xml-parser from converting *any* digit-containing value to a JS number.
+        // A narrower regex (e.g. /^\d+$/) would still parse mixed strings like "v2.1" as numbers.
         skipLike: /\d/
     }
 };

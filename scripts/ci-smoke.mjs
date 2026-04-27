@@ -1,3 +1,10 @@
+/**
+ * Deterministic smoke suite for local and CI verification.
+ *
+ * The script validates build output, helper behavior, manifest/tool sync,
+ * proxy forwarding, and stdio server initialization without requiring live
+ * tenant credentials.
+ */
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
@@ -199,6 +206,27 @@ const main = async () => {
         name: tool.name,
         description: tool.description
       })))
+    );
+  });
+
+  test('manifest telemetry setting maps packaged config to KEEPIT_DISABLE_ANALYTICS', async () => {
+    const manifestPath = path.join(repoRoot, 'manifest.json');
+    const manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
+
+    assert.deepEqual(
+      manifest.user_config?.keepit_disable_analytics,
+      {
+        type: 'boolean',
+        title: 'Disable telemetry',
+        description: 'Disable Keepit MCP telemetry for this installed extension.',
+        required: false,
+        default: false
+      }
+    );
+
+    assert.equal(
+      manifest.server?.mcp_config?.env?.KEEPIT_DISABLE_ANALYTICS,
+      '${user_config.keepit_disable_analytics}'
     );
   });
 

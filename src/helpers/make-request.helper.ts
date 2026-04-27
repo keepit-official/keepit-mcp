@@ -1,3 +1,9 @@
+/**
+ * Shared authenticated HTTP request executor.
+ *
+ * This module centralizes retry policy, timeout handling, header construction,
+ * and response/error shaping for calls to the Keepit API.
+ */
 import type { IHeaderResponse, IMakeRequestBaseParams, IMakeRequestHeaderParams, TApplyDataCallbackFn, VersionString } from './interfaces/make-request.interface';
 import type { IAuthConfig } from './auth-config.helper';
 
@@ -40,6 +46,10 @@ const shouldRetryRequest = (
     return RETRYABLE_STATUS_CODES.has(errorCode ?? 0) || RETRYABLE_ERROR_NAMES.has(errorName ?? '');
 };
 
+const buildSafeHttpErrorMessage = (statusCode: number) => {
+    return `Keepit API request failed with HTTP ${statusCode}`;
+};
+
 function makeRequest(
     requestConfig: IMakeRequestBaseParams,
     authConfig: IAuthConfig,
@@ -63,14 +73,19 @@ async function makeRequest<T>(
     const url = `https://${authConfig.keepitEnv}${KEEPIT_DOMAIN}${requestConfig.url}`;
     const method = requestConfig.method ? requestConfig.method : 'GET';
 
+    // Declared outside the loop so the callback can be invoked after the loop exits.
+    // This ensures callback errors (e.g. parse failures) are never mistaken for
+    // retryable network errors and retried unnecessarily.
+    let rawData!: string;
+    let rawHeaders!: Headers;
+
     for (let attempt = 0; ; attempt++) {
-        let errorCode;
-        let errorHeaders;
-        let response: Response | undefined;
+        let errorCode: number | undefined;
+        let errorHeaders: Headers | undefined;
         const timeoutSignal = AbortSignal.timeout(DEFAULT_REQUEST_TIMEOUT_MS);
 
         try {
-            response = await fetch(
+            const response = await fetch(
                 url,
                 {
                     method,
@@ -84,24 +99,18 @@ async function makeRequest<T>(
             );
 
             if (response.ok) {
-                const data = await response.text();
-                if (requestConfig.includeHeaders && applyDataCallback) {
-                    return (applyDataCallback as TApplyDataCallbackFn<IHeaderResponse, T>)({
-                        data,
-                        headers: response.headers
-                    });
-                }
-
-                return applyDataCallback
-                    ? (applyDataCallback as TApplyDataCallbackFn<string, T>)(data)
-                    : data;
+                rawData = await response.text();
+                rawHeaders = response.headers;
+                break;
             }
 
-            const errorFromResponse = await response.text();
             errorCode = response.status;
             errorHeaders = response.headers;
+            // Consume the body so the connection can be reused, but do not surface raw upstream
+            // payloads to tool callers because they may contain tenant-specific details.
+            await response.text();
 
-            throw new Error(errorFromResponse);
+            throw new Error(buildSafeHttpErrorMessage(response.status));
         } catch (error) {
             if (shouldRetryRequest(method, requestConfig.retrySafe, attempt, errorCode, error instanceof Error ? error.name : undefined)) {
                 await delay(getRetryDelayMs(attempt));
@@ -123,6 +132,17 @@ async function makeRequest<T>(
             );
         }
     }
+
+    if (requestConfig.includeHeaders && applyDataCallback) {
+        return (applyDataCallback as TApplyDataCallbackFn<IHeaderResponse, T>)({
+            data: rawData,
+            headers: rawHeaders
+        });
+    }
+
+    return applyDataCallback
+        ? (applyDataCallback as TApplyDataCallbackFn<string, T>)(rawData)
+        : rawData;
 };
 
 class MakeRequestErrorException extends Error {
