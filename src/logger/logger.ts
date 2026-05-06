@@ -4,13 +4,30 @@ import { join } from 'path';
 type TLogLevel = 'INFO' | 'WARN' | 'ERROR' | 'DEBUG';
 const MAX_LOG_STRING_LENGTH = 500;
 const REDACTED_KEYS = new Set([
+    'access_key',
+    'accesskey',
     'authorization',
     'auth',
     'authtoken',
+    'api_key',
+    'apikey',
+    'bearer',
+    'client_secret',
+    'clientsecret',
+    'cookie',
+    'credential',
+    'credentials',
     'keepit_pass',
     'keepit_password',
     'keepit_user',
+    'private_key',
+    'privatekey',
     'password',
+    'secret',
+    'session',
+    'sessionid',
+    'session_id',
+    'set-cookie',
     'token',
     'raw_token'
 ]);

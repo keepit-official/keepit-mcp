@@ -37,9 +37,9 @@ The Claude configs are typically stored in these paths:
       "command": "node",
       "args": ["/path/to/keepit-mcp/build/main.js"],
       "env": {
-        "KEEPIT_USER": "your-username",
-        "KEEPIT_PASS": "your-password",
-        "KEEPIT_ENV": "us-dc"
+        "KEEPIT_USER": "<your-keepit-username-or-secondary-token-id>",
+        "KEEPIT_PASS": "<your-keepit-password-or-secondary-token-secret>",
+        "KEEPIT_ENV": "<your-keepit-region>"
       }
     }
   }
@@ -81,9 +81,9 @@ In order to use it via CLI, you have to enable 1Password CLI in the 1Password de
 
 Set the following as User Environment Variables (see [Microsoft's guide on environment variables](https://learn.microsoft.com/en-us/windows/win32/shell/user-environment-variables)):
 
-- `KEEPIT_USER` : `your-username`
-- `KEEPIT_PASS` : `your-password`
-- `KEEPIT_ENV` : `us-dc`
+- `KEEPIT_USER` : `<your-keepit-username-or-secondary-token-id>`
+- `KEEPIT_PASS` : `<your-keepit-password-or-secondary-token-secret>`
+- `KEEPIT_ENV` : `<your-keepit-region>`
 
 Restart Claude Desktop after adding the variables.
 
@@ -111,14 +111,14 @@ Then use this config no `env` block needed:
 2. Select **login** keychain in the sidebar
 3. Click **File → New Password Item** (or press ⌘N)
 4. Create two entries:
-   - Keychain Item Name: `keepit-mcp-username`, Account: `keepit`, Password: `your-username`
-   - Keychain Item Name: `keepit-mcp-password`, Account: `keepit`, Password: `your-password`
+   - Keychain Item Name: `keepit-mcp-username`, Account: `keepit`, Password: `<your-keepit-username-or-secondary-token-id>`
+   - Keychain Item Name: `keepit-mcp-password`, Account: `keepit`, Password: `<your-keepit-password-or-secondary-token-secret>`
 
 **Option B: Using Terminal**
 
 ```bash
-security add-generic-password -s "keepit-mcp-username" -a "keepit" -w "your-username"
-security add-generic-password -s "keepit-mcp-password" -a "keepit" -w "your-password"
+security add-generic-password -s "keepit-mcp-username" -a "keepit" -w "<your-keepit-username-or-secondary-token-id>"
+security add-generic-password -s "keepit-mcp-password" -a "keepit" -w "<your-keepit-password-or-secondary-token-secret>"
 ```
 
 **Claude Desktop config** (uses `security find-generic-password` to retrieve at runtime):

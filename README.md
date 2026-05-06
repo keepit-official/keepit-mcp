@@ -172,11 +172,11 @@ This setup is always available during development and enables us to **debug and 
     ```bash
     nano .env or vim .env
 
-  - Inside the created `.env` file, add the following environment variables (values shown as examples):
+  - Inside the created `.env` file, add the following environment variables:
     ```bash
-    KEEPIT_USER=OgGvCVqJDkPVql=?75AXDIBM
-    KEEPIT_PASS=55Z,oS0yn8n.esNdrjvZgfEE
-    KEEPIT_ENV=ws-test
+    KEEPIT_USER=<your-keepit-username-or-secondary-token-id>
+    KEEPIT_PASS=<your-keepit-password-or-secondary-token-secret>
+    KEEPIT_ENV=<your-keepit-region>
     KEEPIT_DISABLE_ANALYTICS=0
     LOCAL_PORT=5000
     ```
