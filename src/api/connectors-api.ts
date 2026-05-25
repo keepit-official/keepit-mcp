@@ -81,3 +81,53 @@ export const getConnectorHealthSettings = (userId: string, connectorGUID: string
 
     return { requestConfig, applyDataCallback };
 };
+
+export const getCriticalConnectorsSettings = (userId: string) => {
+    const requestConfig = {
+        url: `/users/${userId}/stats/children/partner/critical-devices?children-count=true&sort=%2Baccount-company`
+    };
+
+    const applyDataCallback = (response: string): ICriticalDeviceAttributeMap[] => {
+        const nodes: TCriticalDeviceNode[] = normalizeArrayResponse(Parser.parse(response).children.node);
+        return nodes.map(node =>
+            node.data.attribute.reduce((acc, { key, value }) => {
+                acc[key] = value.toString();
+                return acc;
+            }, {} as ICriticalDeviceAttributeMap)
+        );
+    };
+
+    return { requestConfig, applyDataCallback };
+};
+
+export const getDeviceStatus = (userId: string, deviceId: string) => {
+    const requestConfig = {
+        url: `/users/${userId}/devices/${deviceId}/status`
+    };
+    const applyDataCallback = (response: string) => {
+        const parsedResponse = Parser.parse(response)?.devstatus?.entry;
+        let deviceStatus: IDeviceStatus = {
+            status: '0'
+        };
+        if (!parsedResponse) {
+            return deviceStatus;
+        }
+        const responseDevStatusArray = parsedResponse instanceof Array
+            ? parsedResponse
+            : [parsedResponse];
+
+        if (responseDevStatusArray) {
+            deviceStatus = responseDevStatusArray[responseDevStatusArray.length - 1];
+            if (responseDevStatusArray[0].adata && responseDevStatusArray[0].adata.ecode) {
+                deviceStatus.ecode = responseDevStatusArray[0].adata.ecode;
+            }
+        }
+
+        return deviceStatus;
+    };
+
+    return {
+        requestConfig,
+        applyDataCallback
+    };
+};

@@ -20,7 +20,7 @@ app.post('/', async (req, res) => {
     method: 'tools/call',
     params: {
       name: requestBody?.requestName,
-      ...(requestBody?.argumentsList && { arguments: requestBody.argumentsList })
+      arguments: requestBody?.argumentsList ?? {} // Keep MCP `params.arguments` as an object. This is needed for tools with optional argumentsList.
     }
   };
 

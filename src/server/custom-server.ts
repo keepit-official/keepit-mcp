@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getToolConfig, getToolCallback } from '../helpers/mcp.helper.js';
-import { toolsDefinitions, toolsRequiredAcl } from '../tools/index.js';
+import { toolsDefinitions, toolsRequiredAcl, pmcToolsDefinitions } from '../tools/index.js';
 import { setupAuthConfig } from '../helpers/auth-config.helper.js';
+import { checkIfPartnerRole } from '../helpers/user-role.helper.js';
 import { getAllowedTools } from '../helpers/acl.helper.js';
 
 export class CustomMcpServer extends McpServer {
@@ -31,12 +32,15 @@ export class CustomMcpServer extends McpServer {
             throw new Error('Auth config is not set. Cannot register tools.');
         }
 
-        if (!toolsDefinitions.length) {
+        const partnerMode = checkIfPartnerRole(this.authConfig.userRole);
+        const toolsToUse = partnerMode ? pmcToolsDefinitions : toolsDefinitions;
+
+        if (!toolsToUse.length) {
             console.error('No tools to register.');
             return;
         }
 
-        const allowedTools = getAllowedTools(toolsDefinitions, toolsRequiredAcl);
+        const allowedTools = getAllowedTools(toolsToUse, toolsRequiredAcl);
 
         if (!allowedTools.length) {
             console.error('No allowed tools.');

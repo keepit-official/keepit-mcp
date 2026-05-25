@@ -18,7 +18,7 @@ export function validateAndSanitizeTimespan (timespan: string): string {
     const validationResult = ISO8601DurationSchema.safeParse(timespan);
     if (!validationResult.success) {
     // Provide consistent error messages that match test expectations
-        const errorMessage = validationResult.error.errors[0].message;
+        const errorMessage = validationResult.error.issues[0].message;
         if (errorMessage.includes('Duration cannot exceed 365 days')) {
             throw new Error('Invalid ISO8601 timespan format: Timespan cannot exceed 365 days');
         }

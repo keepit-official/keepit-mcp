@@ -68,3 +68,17 @@ export const setupAuthConfig = async () => {
         throw error;
     }
 };
+
+/**
+ * Creates a modified auth config with the customer's GUID instead of the partner's.
+ * This allows partner tools to receive managed customer information while using the partner's credentials.
+ */
+export const resolveCustomerAuthConfig = (
+    customerGuid: string,
+    partnerAuthConfig: IAuthConfig
+): IAuthConfig => {
+    return {
+        ...partnerAuthConfig,
+        keepitGuid: customerGuid
+    };
+};

@@ -22,7 +22,7 @@ export const getValidatedAuditLogArguments = (toolParams: ToolParams): AuditLogR
     return validateAuditLogRequest(requestArguments);
 };
 
-const validateAuditLogRequest = (request: ToolArguments): AuditLogRequest => {
+const validateAuditLogRequest = (request: ToolArguments) => {
     return parseToolArgsOrThrow(
         AuditLogRequestSchema,
         request,

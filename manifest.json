@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "keepit-mcp-server",
   "display_name": "Keepit MCP Server",
-  "version": "1.0.0",
-  "description": "A simple MCP extension (MCPB) that brings Keepit's enterprise backup capabilities directly into your workspace. Our vision is to enable comprehensive management of your entire backup and restore lifecycle - across all Keepit-supported workloads including Microsoft 365, SharePoint, Azure DevOps, Salesforce, and beyond.",
-  "long_description": "**Keepit Extension**\nThis extension provides a Model Context Protocol (MCP) server for interacting with the Keepit REST API.\n\n**What's Available Now (Read-Only)**\n* **View Backup Jobs**: Check status, history, and details of backup operations across all workloads\n* **Browse Snapshots**: Explore available backup snapshots and their contents\n* **Compare Snapshots**: See differences between backup versions\n* **Monitor Connectors**: View health status and configuration of backup connectors for each service\n* **Check Coverage**: Review what resources are currently protected\n\n**What's Coming Later**\n* **Backup Management**: Schedule and configure backup jobs\n* **Restore Operations**: Perform restores with granular control over what gets restored\n* **Resource Management**: Track usage, compliance, and billing\n* **Anomaly Detection**: Get alerts on backup issues and irregularities\n* **Full Account Management**: Comprehensive control over accounts and products\n\n**Configuration**\nThe extension requires Keepit API credentials which can be configured through user settings.",
+  "version": "1.1.0",
+  "description": "A MCP extension (MCPB) that brings Keepit's backup capabilities directly into your workspace — for both Keepit customers managing their own account and partners managing multiple customer accounts through the Partner Management Console (PMC).",
+  "long_description": "**Keepit Extension**\nThis extension provides a Model Context Protocol (MCP) server for interacting with the Keepit REST API. It supports two usage modes: individual Keepit customers managing their own account, and partners managing multiple customer accounts through the Keepit Partner Management Console (PMC).\n\n**What's Available Now (Read-Only)**\n* **View Backup Jobs**: Check status, history, and details of backup operations across all workloads\n* **Browse Snapshots**: Explore available backup snapshots and their contents\n* **Monitor Connectors**: View health status and configuration of backup connectors for each service\n* **Partner Account Management** *(PMC)*: List and inspect all managed customer accounts\n* **Partner Connector Monitoring** *(PMC)*: View critical connectors and health summaries across all customer accounts, with links to resolution guides\n* **Partner Seat Usage** *(PMC)*: Track seat allocation, usage history, and limit violations across customer accounts\n* **Partner Audit Logs** *(PMC)*: Review audit log activity across all managed accounts or for a specific customer\n\n**What's Coming Later**\n* **Backup Management**: Schedule and configure backup jobs\n* **Restore Operations**: Perform restores with granular control over what gets restored\n* **Anomaly Detection**: Get alerts on backup issues and irregularities\n\n**Configuration**\nThe extension requires Keepit API credentials which can be configured through user settings.",
   "author": {
     "name": "Keepit A/S",
     "url": "https://www.keepit.com"
@@ -65,6 +65,50 @@
     {
       "name": "get_snapshot_range",
       "description": "Get a list of snapshots for a connector within a given time range"
+    },
+    {
+      "name": "pmc_get_my_account_info",
+      "description": "Get details about the current partner account, including contact information and users with access"
+    },
+    {
+      "name": "pmc_get_subaccount_list",
+      "description": "Get a list of all customer accounts managed by this partner"
+    },
+    {
+      "name": "pmc_get_subaccount_info",
+      "description": "Get details about a specific customer account, including contact information, users, and available cloud services"
+    },
+    {
+      "name": "pmc_get_all_critical_connectors",
+      "description": "List all connectors currently in a critical state across all customer accounts managed by the partner"
+    },
+    {
+      "name": "pmc_get_subaccount_connectors",
+      "description": "Get a list of cloud connectors configured for a specific managed customer account"
+    },
+    {
+      "name": "pmc_get_connectors_health_summary",
+      "description": "Get connector health status, last backup date, and failure details for all connectors of a managed customer account"
+    },
+    {
+      "name": "pmc_get_connector_issue_solution",
+      "description": "Get the current health status of a connector and, when unhealthy, an explanation of the issue and a link to a resolution guide"
+    },
+    {
+      "name": "pmc_get_exceeding_seat_limit",
+      "description": "Get all customer accounts that are currently exceeding their seat limits, including overage and grace period details"
+    },
+    {
+      "name": "pmc_get_seats_allocation",
+      "description": "Get seat allocation per connector type for the partner or a specific customer account within a date range"
+    },
+    {
+      "name": "pmc_get_subaccount_seat_usage_history",
+      "description": "Get a historical timeline of seat usage for a specific customer account within a date range"
+    },
+    {
+      "name": "pmc_get_audit_log_history",
+      "description": "Get audit log records for a date range — for a specific customer account or grouped across all managed accounts"
     }
   ],
   "prompts": [

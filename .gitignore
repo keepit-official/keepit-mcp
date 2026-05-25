@@ -6,8 +6,6 @@ node_modules/
 build/
 export/
 
-# Keep package.json and package-lock.json
-package-lock.json
 # Ignore environment files
 .env
 

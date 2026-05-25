@@ -20,8 +20,8 @@ const validateConnectorHealthRequest = (request: ToolArguments) => {
     const validationResult = ConnectorHealthRequestSchema.safeParse(request);
 
     if (!validationResult.success) {
-        const errorMessages = validationResult.error.errors
-            .map((err) => `${err.path.join('.')}: ${err.message}`)
+        const errorMessages = validationResult.error.issues
+            .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
             .join('; ');
         throw new Error(`Invalid configuration: ${errorMessages}`);
     }

@@ -23,10 +23,16 @@ interface IAuditLogRecord {
     token: string;
 }
 
+interface IAuditLogSubaccountGroup {
+    account: string;
+    auditLogs: IAuditLogRecord[];
+}
+
 interface IAuditLogBody {
     account: string;
     from?: string | Date;
     to?: string | Date;
+    recursive?: 'true';
 }
 
 type TAuditLogRequest = z.infer<typeof AuditLogRequestSchema>;

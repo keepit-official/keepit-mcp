@@ -103,3 +103,13 @@ export const getSnapshotCount = (
 
     return { requestConfig, applyDataCallback };
 };
+
+export const getLatestImportedSnapshot = (userId: string, deviceId: string) => {
+    const requestConfig: IMakeRequestBaseParams = {
+        url: `/users/${userId}/devices/${deviceId}/history/latest_imported`,
+        headers: { Accept: 'application/vnd.keepit.v1+xml' }
+    };
+    const applyDataCallback = (response: string): { tstamp: string; } | null =>
+        Parser.parse(response)?.history?.backup ?? null;
+    return { requestConfig, applyDataCallback };
+};

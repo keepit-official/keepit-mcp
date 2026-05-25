@@ -1,6 +1,6 @@
-import type { ZodSchema } from 'zod';
+import type { z } from 'zod';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types';
-import type { ToolMetadata } from '../tools/tools.interfaces';
+import type { ToolArguments, ToolMetadata } from '../tools/tools.interfaces';
 
 export const createToolResponse = <T extends { [x: string]: unknown; } | undefined>(
     result: T,
@@ -36,16 +36,16 @@ export const createToolErrorResponse = (
     };
 };
 
-export function parseToolArgsOrThrow(
-    schema: ZodSchema,
-    input: unknown,
+export const parseToolArgsOrThrow = <T>(
+    schema: z.ZodType<T>,
+    input: ToolArguments,
     context = 'Invalid configuration'
-) {
+): T => {
     const { data, success, error } = schema.safeParse(input);
 
     if (!success) {
-        const message = error.errors
-            .map(err => `${err.path.join('.')}: ${err.message}`)
+        const message = error.issues
+            .map(issue => `${issue.path.join('.')}: ${issue.message}`)
             .join('; ');
 
         throw new Error(`${context}: ${message}`);

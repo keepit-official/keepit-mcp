@@ -24,9 +24,9 @@ const validateJobRequest = (request: ToolArguments): JobHistoryRequest => {
     const validationResult = JobHistorySchema.safeParse(request);
 
     if (!validationResult.success) {
-        const errorMessages = validationResult.error.errors.map(err => {
-            const path = err.path.length > 0 ? `${err.path.join('.')}: ` : '';
-            return `${path}${err.message}`;
+        const errorMessages = validationResult.error.issues.map(issue => {
+            const path = issue.path.length > 0 ? `${issue.path.join('.')}: ` : '';
+            return `${path}${issue.message}`;
         }).join('; ');
         throw new Error(`Invalid configuration: ${errorMessages}`);
     }

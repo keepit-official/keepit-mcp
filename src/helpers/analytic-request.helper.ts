@@ -16,14 +16,6 @@ export const analyticRequest = async (
 ) => {
     const date = new Date().toISOString();
 
-    const item = {
-        i: {
-            action: escapeXMLChars(analyticsData.action),
-            date,
-            ...analyticsData.context ? { context: escapeXMLChars(analyticsData.context) } : {}
-        }
-    };
-
     logger.info('Send analytics data');
 
     const clearedGuid = authConfig.keepitGuid.replaceAll('-', '');
@@ -35,7 +27,11 @@ export const analyticRequest = async (
             id: escapeXMLChars(`${encryptedGuid}-${authConfig.sessionId}`),
             role: authConfig.userRole
         },
-        item
+        i: {
+            action: escapeXMLChars(analyticsData.action),
+            date,
+            ...analyticsData.context ? { context: escapeXMLChars(analyticsData.context) } : {}
+        }
     }, 'analytic');
 
     try {

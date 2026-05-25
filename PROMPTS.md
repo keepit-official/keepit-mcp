@@ -1,6 +1,28 @@
-# Example Prompts for Claude Desktop with MCP Servers
+# Example Prompts for Claude Desktop with Keepit MCP
 
-This document provides example prompts you can use with Claude Desktop when connected to the Keepit and Microsoft Entra ID (Azure AD) MCP servers. The prompts are organized by complexity and use case, covering all available MCP tools.
+This document provides example prompts you can use with Claude Desktop when connected to the Keepit and Microsoft Entra ID (Azure AD) MCP servers. The prompts are organized by complexity and use case, covering all available MCP tools — for both individual Keepit customers and partners managing multiple accounts through the Partner Management Console (PMC).
+
+## Partner Management (PMC)
+
+### Account Overview
+- "List all customer accounts I manage"
+- "Show me my partner account details"
+- "Get information about a specific customer account"
+
+### Critical Connector Monitoring
+- "Show me all critical connectors across all my customer accounts"
+- "Get the connector health summary for customer [GUID]"
+- "One of my customers has a failing connector — what's wrong and how do they fix it?"
+
+### Seat Usage & Limits
+- "Which of my customer accounts are exceeding their seat limits?"
+- "Show me seat allocation breakdown for the past month"
+- "Get seat usage history for customer [GUID] for the past quarter"
+- "Are any of my customers approaching their Microsoft 365 seat limits?"
+
+### Audit & Compliance
+- "Show me audit log activity across all my customers for the past week"
+- "Get audit logs for a specific customer for the past 24 hours"
 
 ## 🔧 Basic Operations
 
@@ -161,3 +183,5 @@ Focus on: Data discovery, backup verification, privacy compliance, data lifecycl
 
 ### **MSP/Service Providers**
 Focus on: Multi-tenant operations, automated workflows, cost optimization, service level monitoring
+### **Partners (PMC)**
+Focus on: Multi-account monitoring, critical connector triage, seat limit management, cross-account audit review
