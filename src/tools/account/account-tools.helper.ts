@@ -5,7 +5,6 @@ import { getUser, getUserSettings } from '../../api/account-api.js';
 import { logger } from '../../logger/logger.js';
 import { makeRequest } from '../../helpers/make-request.helper.js';
 import type { IAuthConfig } from '../../helpers/auth-config.helper.js';
-import type { ToolResult } from '../tools.interfaces.js';
 
 export const getUserId = async (authConfig: IAuthConfig): Promise<string> => {
     try {
@@ -40,7 +39,7 @@ export const getUserRole = async (authConfig: IAuthConfig): Promise<string> => {
     }
 };
 
-export const getMyAccountInfo = async (authConfig: IAuthConfig): Promise<ToolResult<IAccountInfo>> => {
+export const getMyAccountInfo = async (authConfig: IAuthConfig) => {
     try {
         // For account info, we make a request to /users/{account-id}
         const { requestConfig, applyDataCallback } = getUserSettings(authConfig.keepitGuid);
@@ -51,7 +50,7 @@ export const getMyAccountInfo = async (authConfig: IAuthConfig): Promise<ToolRes
 
         logger.info('[ACCOUNT_INFO] Parsed JSON data:', response);
 
-        const result = {
+        const account = {
             id: authConfig.keepitGuid,
             enabled: response.enabled === true,
             created: response.created || '',
@@ -63,7 +62,7 @@ export const getMyAccountInfo = async (authConfig: IAuthConfig): Promise<ToolRes
         logger.info(`[ACCOUNT_INFO] Successfully retrieved account info for: ${authConfig.keepitGuid}`);
 
         return {
-            result,
+            result: { account },
             success: true,
             messages: ['Account information retrieved successfully']
         };

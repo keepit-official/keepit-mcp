@@ -1,7 +1,7 @@
 import { generateXmlBody } from '../helpers/xml-helper.js';
 import { normalizeArrayResponse } from '../helpers/fetch.helper.js';
 import { XMLParser } from 'fast-xml-parser';
-import xmlParseOptions from './fast-xml-parser-options.js';
+import xmlParseOptions from '../helpers/fast-xml-parser-options.js';
 import type { IMakeRequestBaseParams } from '../helpers/interfaces/make-request.interface.js';
 
 const Parser = new XMLParser(xmlParseOptions);

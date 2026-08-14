@@ -1,10 +1,14 @@
-import { appendFileSync } from 'fs';
-import { join } from 'path';
+import { appendFileSync, mkdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 type TLogLevel = 'INFO' | 'WARN' | 'ERROR' | 'DEBUG';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 // Use process.cwd() for compatibility with test environment
-const LOG_FILE = join(process.cwd(), 'keepit-mcp-pro.log');
+const LOG_FILE = join(__dirname, '..', '..', 'logs', 'keepit-mcp-pro.log');
+// Create directory for logs
+mkdirSync(dirname(LOG_FILE), { recursive: true });
 
 function formatMessage(
     level: TLogLevel,

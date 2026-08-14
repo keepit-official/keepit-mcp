@@ -5,8 +5,8 @@ interface JobsResponse {
     messages: string[];
 }
 
-type TRestoreJobTypes = 'srestore' | 'restore' | 'pstrestore' | 'zipdownload';
-type TJobTypes = 'backup' | TRestoreJobTypes;
+type TRestoreJobTypes = 'srestore' | 'restore' | 'pstrestore' | 'zipdownload' | 'pmrestore';
+export type TJobType = 'backup' | TRestoreJobTypes;
 
 export interface IJob {
     guid: string;
@@ -21,7 +21,7 @@ export interface IJob {
     comment?: string;
     started?: string;
     cancelled?: string;
-    type?: TJobTypes;
+    type?: TJobType[];
     token?: string;
     stats?: {
         stat: IJobStatistic | IJobStatistic[];
@@ -171,12 +171,12 @@ interface IPutSkippedItemsLogBody {
 }
 
 interface IGetDeviceJobsCountParams {
-    'job-type': JobTypes;
     from: string;
+    'job-types'?: TJobType[];
     to?: string;
 }
 
-interface IGetDeviceJobsStatusesCountParams extends Omit<IGetDeviceJobsCountParams, 'job-type'> {
+interface IGetDeviceJobsStatusesCountParams extends Omit<IGetDeviceJobsCountParams, 'job-types'> {
     'job-types': JobTypes[];
 }
 
@@ -185,11 +185,11 @@ interface IGetWorkloadJobsStatusesCountParams extends IGetDeviceJobsStatusesCoun
 }
 
 interface IGetWorkloadSuccessfulJobsCountParams extends IGetDeviceJobsCountParams {
-    'device-type': TCloudType;
+    'device-type'?: TCloudType;
 }
 
 interface IDeviceJobsStatutesCountObject {
-    name: TRestoreJobTypes;
+    name: TJobType;
     scheduled: number;
     'in-progress': number;
     cancelled: number;
@@ -220,6 +220,13 @@ interface IWorkloadJobsStatutesCountResponse {
     'jobs-count': {
         'device': IWorkloadSingleDeviceJobsStatutesResponse | IWorkloadSingleDeviceJobsStatutesResponse[];
     };
+}
+
+interface IWorkloadJobsCountData {
+    'jobs-count': {
+        guid: string;
+        counts: IDeviceJobsStatutesCountObject[];
+    }[];
 }
 
 interface IDeviceSuccessfulJobsCountObject {

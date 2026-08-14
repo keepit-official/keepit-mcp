@@ -5,6 +5,9 @@ import { JOBS_TOOLS_DEFINITIONS, JOBS_TOOLS_REQUIRED_ACL } from './jobs/jobs-too
 import { AUDIT_LOG_TOOLS_DEFINITIONS, AUDIT_LOG_TOOLS_REQUIRED_ACL } from './audit-logs/audit-logs-tools-definitions.js';
 import { SNAPSHOT_TOOLS_DEFINITIONS, SNAPSHOT_TOOLS_REQUIRED_ACL } from './snapshot/snapshot-tools-definitions.js';
 import { CONNECTOR_TOOLS_DEFINITIONS, CONNECTORS_TOOLS_REQUIRED_ACL } from './connector/connectors-tools-definitions.js';
+import { DOWNLOAD_TOOLS_DEFINITIONS, DOWNLOAD_TOOLS_REQUIRED_ACL } from './download/download-tools-definition.js';
+import { BROWSING_TOOLS_DEFINITIONS, BROWSING_TOOLS_REQUIRED_ACL } from './browsing/browsing-tools-definition.js';
+import { MONITORING_TOOLS_DEFINITIONS, MONITORING_TOOLS_REQUIRED_ACL } from './monitoring/monitoring-tools-definitions.js';
 import { PMC_CONNECTORS_TOOLS_DEFINITIONS, PMC_CONNECTORS_TOOLS_REQUIRED_ACL } from './pmc/pmc-connectors/pmc-connectors-tools-definitions.js';
 import { PMC_ACCOUNTS_TOOLS_DEFINITIONS, PMC_ACCOUNTS_TOOLS_REQUIRED_ACL } from './pmc/pmc-accounts/pmc-accounts-tools-definitions.js';
 import { PMC_USAGE_TOOLS_DEFINITIONS, PMC_USAGE_TOOLS_REQUIRED_ACL } from './pmc/pmc-usage/pmc-usage-tools-definitions.js';
@@ -15,6 +18,9 @@ import { JOBS_TOOLS_HANDLER } from './jobs/jobs-tools-handler.js';
 import { CONNECTOR_TOOLS_HANDLER } from './connector/connectors-tools-handler.js';
 import { AUDIT_LOGS_TOOLS_HANDLER } from './audit-logs/audit-logs-tools-handler.js';
 import { SNAPSHOT_TOOLS_HANDLER } from './snapshot/snapshot-tools-handler.js';
+import { DOWNLOAD_ITEMS_HANDLER } from './download/download-tools-handler.js';
+import { BROWSING_TOOLS_HANDLER } from './browsing/browsing-tools-handler.js';
+import { MONITORING_TOOLS_HANDLER } from './monitoring/monitoring-tools-handler.js';
 import { PMC_CONNECTORS_TOOLS_HANDLER } from './pmc/pmc-connectors/pmc-connectors-tools-handler.js';
 import { PMC_ACCOUNTS_TOOLS_HANDLER } from './pmc/pmc-accounts/pmc-accounts-tools-handler.js';
 import { PMC_USAGE_TOOLS_HANDLER } from './pmc/pmc-usage/pmc-usage-tools-handler.js';
@@ -25,7 +31,10 @@ export const toolsDefinitions = [
     ...JOBS_TOOLS_DEFINITIONS,
     ...CONNECTOR_TOOLS_DEFINITIONS,
     ...AUDIT_LOG_TOOLS_DEFINITIONS,
-    ...SNAPSHOT_TOOLS_DEFINITIONS
+    ...SNAPSHOT_TOOLS_DEFINITIONS,
+    ...BROWSING_TOOLS_DEFINITIONS,
+    ...DOWNLOAD_TOOLS_DEFINITIONS,
+    ...MONITORING_TOOLS_DEFINITIONS
 ];
 
 export const toolsHandlers: ToolHandlers = {
@@ -34,6 +43,9 @@ export const toolsHandlers: ToolHandlers = {
     ...ACCOUNT_TOOLS_HANDLER,
     ...AUDIT_LOGS_TOOLS_HANDLER,
     ...SNAPSHOT_TOOLS_HANDLER,
+    ...BROWSING_TOOLS_HANDLER,
+    ...DOWNLOAD_ITEMS_HANDLER,
+    ...MONITORING_TOOLS_HANDLER,
     ...PMC_CONNECTORS_TOOLS_HANDLER,
     ...PMC_ACCOUNTS_TOOLS_HANDLER,
     ...PMC_USAGE_TOOLS_HANDLER,
@@ -46,6 +58,9 @@ export const toolsRequiredAcl = {
     ...CONNECTORS_TOOLS_REQUIRED_ACL,
     ...AUDIT_LOG_TOOLS_REQUIRED_ACL,
     ...SNAPSHOT_TOOLS_REQUIRED_ACL,
+    ...BROWSING_TOOLS_REQUIRED_ACL,
+    ...DOWNLOAD_TOOLS_REQUIRED_ACL,
+    ...MONITORING_TOOLS_REQUIRED_ACL,
     ...PMC_CONNECTORS_TOOLS_REQUIRED_ACL,
     ...PMC_ACCOUNTS_TOOLS_REQUIRED_ACL,
     ...PMC_USAGE_TOOLS_REQUIRED_ACL,

@@ -1,6 +1,7 @@
 import type { z } from 'zod';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types';
-import type { ToolArguments, ToolMetadata } from '../tools/tools.interfaces';
+import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { ICreateToolHandlerConfig, ToolArguments, ToolMetadata, ToolResult } from '../tools/tools.interfaces.js';
+import { MakeRequestErrorException } from './make-request.helper.js';
 
 export const createToolResponse = <T extends { [x: string]: unknown; } | undefined>(
     result: T,
@@ -18,9 +19,11 @@ export const createToolResponse = <T extends { [x: string]: unknown; } | undefin
 
 export const createToolErrorResponse = (
     name: string,
-    error: unknown | Error
+    error: unknown | MakeRequestErrorException | Error
 ): CallToolResult => {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof MakeRequestErrorException || error instanceof Error
+        ? error.message
+        : 'Unknown error';
 
     return {
         isError: true,
@@ -52,4 +55,41 @@ export const parseToolArgsOrThrow = <T>(
     }
 
     return data;
+};
+
+export const createToolHandler = async <ToolInput, ToolOutput extends { [x: string]: unknown; }>(
+    toolConfig: ICreateToolHandlerConfig<ToolInput, ToolOutput>
+) => {
+    try {
+        const { toolName, toolRequest, toolHandler, validationSchema, authConfig } = toolConfig;
+
+        let toolHandlerResponse: Promise<ToolResult<ToolOutput>> | ToolResult<ToolOutput>;
+
+        if (toolRequest) {
+            const validatedArguments = parseToolArgsOrThrow(validationSchema, toolRequest.params.arguments);
+
+            toolHandlerResponse = await toolHandler(
+                authConfig,
+                validatedArguments
+            );
+        } else {
+            toolHandlerResponse = await toolHandler(
+                authConfig
+            );
+        }
+        
+        const { result, ...meta } = toolHandlerResponse;
+
+        const metadata: ToolMetadata = {
+            tool: toolName,
+            ...meta
+        };
+
+        return createToolResponse(
+            result,
+            metadata
+        );
+    } catch (error) {
+        return createToolErrorResponse(toolConfig.toolName, error);
+    }
 };

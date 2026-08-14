@@ -1,3 +1,4 @@
+import type { IDeviceStatus, TCloudType } from '../api/api-types/connectors-api.js';
 
 
 export const getConnectorFailureReason = ({ ecode, status }: IDeviceStatus, deviceType: TCloudType): string => {

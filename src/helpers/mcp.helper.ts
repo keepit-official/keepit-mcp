@@ -3,7 +3,7 @@ import { logger } from '../logger/logger.js';
 import { toolsHandlers } from '../tools/index.js';
 import { validateEnvironment } from './validations.helper.js';
 import { z } from 'zod';
-import type { CallToolRequest, EnumSchema, JSONRPCErrorResponse, Tool } from '@modelcontextprotocol/sdk/types';
+import type { CallToolRequest, EnumSchema, JSONRPCErrorResponse, Tool } from '@modelcontextprotocol/sdk/types.js';
 import type { IAuthConfig } from './auth-config.helper.js';
 import type { McpServer, ToolCallback } from '@modelcontextprotocol/sdk/server/mcp.js';
 

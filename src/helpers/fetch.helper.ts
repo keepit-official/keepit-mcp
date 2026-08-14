@@ -7,3 +7,11 @@ export function normalizeArrayResponse<T> (responseNode?: T | T[]): T[] {
 
     return [];
 };
+
+export const getURLSearchParamsString = <T>(params?: T) => {
+    if (!params) {
+        return '';
+    }
+    const searchParams = new URLSearchParams(params);
+    return '?' + searchParams.toString();
+};

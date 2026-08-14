@@ -1,6 +1,6 @@
 {
   "name": "keepit-mcp",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Keepit-MCP is a Model Context Protocol (MCP) server for the Keepit REST API.",
   "license": "MIT",
   "author": "Keepit",
@@ -24,7 +24,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.26.0",
     "dotenv": "16.5.0",
-    "fast-xml-parser": "5.5.11",
+    "fast-xml-parser": "5.8.0",
     "js-base64": "3.7.5",
     "zod": "4.3.6"
   },
@@ -41,7 +41,7 @@
     "jiti": "2.5.1",
     "nodemon": "3.1.10",
     "rimraf": "6.0.1",
-    "typescript": "5.8.2",
-    "typescript-eslint": "8.56.0"
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.60.1"
   }
 }

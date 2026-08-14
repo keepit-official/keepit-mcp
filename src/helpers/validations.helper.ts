@@ -1,4 +1,4 @@
-import type { IAuthConfig } from './auth-config.helper';
+import type { IAuthConfig } from './auth-config.helper.js';
 
 /**
  * Validates environment variables required for audit log operations

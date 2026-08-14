@@ -1,23 +1,24 @@
-import { getConnectors } from '../../connector/connectors-tools.helper.js';
+import { fetchConnectors } from '../../connector/connectors-tools.helper.js';
 import { getLatestImportedSnapshot } from '../../../api/snapshot-api.js';
-import { getDeviceStatus, getConnectorHealthSettings, getCriticalConnectorsSettings } from '../../../api/connectors-api.js';
+import { getDeviceStatus, getConnectorHealth, getCriticalConnectorsSettings } from '../../../api/connectors-api.js';
 import { makeRequest, MakeRequestErrorException } from '../../../helpers/make-request.helper.js';
 import { logger } from '../../../logger/logger.js';
 import { resolveCustomerAuthConfig } from '../../../helpers/auth-config.helper.js';
 import { getConnectorFailureReason, getConnectorSolutionLink } from '../../../helpers/connector-status.helper.js';
 import type { IAuthConfig } from '../../../helpers/auth-config.helper.js';
 import type { ToolResult } from '../../tools.interfaces.js';
+import type { ICriticalConnector, TCloudType } from '../../../api/api-types/connectors-api.js';
 
 export const getSubaccountConnectorsHealthSummary = async (customerGuid: string, authConfig: IAuthConfig) => {
     try {
         const customerAuthConfig = resolveCustomerAuthConfig(customerGuid, authConfig);
-        const { result: connectors } = await getConnectors(customerAuthConfig);
+        const { result: { connectors } } = await fetchConnectors(customerAuthConfig);
 
         const connectorsHealth = await Promise.all(
             connectors.map(async (connector) => {
                 const { requestConfig: snapshotConfig, applyDataCallback: snapshotCb } = getLatestImportedSnapshot(customerGuid, connector.guid);
                 const { requestConfig: statusConfig, applyDataCallback: statusCb } = getDeviceStatus(customerGuid, connector.guid);
-                const { requestConfig: healthConfig, applyDataCallback: healthCb } = getConnectorHealthSettings(customerGuid, connector.guid);
+                const { requestConfig: healthConfig, applyDataCallback: healthCb } = getConnectorHealth(customerGuid, connector.guid);
 
                 const [snapshotRaw, statusEntry, healthStatus] = await Promise.all([
                     // 404 means no snapshots exist yet for this connector — treat as no backup
@@ -55,7 +56,7 @@ export const getConnectorIssueSolution = async (customerGuid: string, connectorG
     const customerAuthConfig = resolveCustomerAuthConfig(customerGuid, authConfig);
 
     const { requestConfig: statusConfig, applyDataCallback: statusCb } = getDeviceStatus(customerGuid, connectorGuid);
-    const { requestConfig: healthConfig, applyDataCallback: healthCb } = getConnectorHealthSettings(customerGuid, connectorGuid);
+    const { requestConfig: healthConfig, applyDataCallback: healthCb } = getConnectorHealth(customerGuid, connectorGuid);
 
     const [statusEntry, healthStatus] = await Promise.all([
         makeRequest(statusConfig, customerAuthConfig, statusCb),

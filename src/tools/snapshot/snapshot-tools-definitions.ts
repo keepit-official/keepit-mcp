@@ -37,7 +37,7 @@ const GET_LATEST_SNAPSHOT_TOOL = {
                     type: {
                         type: 'string',
                         enum: ['p', 'c'],
-                        description: 'Shows if the snapshot was complete or partial (c/p)'
+                        description: 'Shows if the snapshot was complete (c) or partial (p)'
                     }
                 },
                 required: ['size', 'tstamp', 'type'],
@@ -58,11 +58,11 @@ const GET_SNAPSHOT_RANGE_TOOL = {
                 type: 'string',
                 description: 'GUID of the connector whose snapshot data you want.'
             },
-            startTime: {
+            start: {
                 type: 'string',
                 description: 'Start date (ISO 8601). If omitted, server uses current time.'
             },
-            timespan: {
+            span: {
                 type: 'string',
                 description: 'Duration (ISO 8601) for the range of snapshots. (e.g., "P7D" for 7 days, "P1M" for 1 month)',
                 default: 'P7D'
@@ -78,7 +78,7 @@ const GET_SNAPSHOT_RANGE_TOOL = {
                 default: 99
             }
         },
-        required: ['guid'],
+        required: ['guid', 'start', 'span', 'count'],
         additionalProperties: false
     },
     outputSchema: {
@@ -96,7 +96,8 @@ const GET_SNAPSHOT_RANGE_TOOL = {
                         },
                         type: {
                             type: 'string',
-                            description: 'Type of snapshot'
+                            enum: ['p', 'c'],
+                            description: 'Shows if the snapshot was complete (c) or partial (p)'
                         },
                         size: {
                             type: 'string',

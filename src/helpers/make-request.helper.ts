@@ -1,5 +1,5 @@
-import type { IHeaderResponse, IMakeRequestBaseParams, IMakeRequestHeaderParams, TApplyDataCallbackFn, VersionString } from './interfaces/make-request.interface';
-import type { IAuthConfig } from './auth-config.helper';
+import type { IHeaderResponse, IMakeRequestBaseParams, IMakeRequestHeaderParams, TApplyDataCallbackFn, VersionString } from './interfaces/make-request.interface.js';
+import type { IAuthConfig } from './auth-config.helper.js';
 
 const KEEPIT_DOMAIN = '.keepit.com';
 
@@ -32,7 +32,7 @@ async function makeRequest<T>(
         response = await fetch(
             url,
             {
-                method: requestConfig.method ? requestConfig.method : 'GET',
+                method: requestConfig.method ?? 'GET',
                 headers: {
                     ...requestConfig.headers,
                     ...{ Authorization: `Basic ${authConfig.authToken}` }
@@ -78,11 +78,11 @@ class MakeRequestErrorException {
 }
 
 const getHeaders = (version: VersionString, extraHeaders: HeadersInit = {}) => {
-    return new Headers({
+    return {
         ...extraHeaders,
         'Content-Type': 'application/xml',
         'Accept': `application/vnd.keepit.${version}+xml`
-    });
+    };
 };
 
 export {

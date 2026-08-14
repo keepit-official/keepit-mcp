@@ -1,11 +1,12 @@
 import { createToolErrorResponse, createToolResponse } from '../../../helpers/tool.helper.js';
 import { resolveCustomerAuthConfig } from '../../../helpers/auth-config.helper.js';
-import { getConnectors } from '../../connector/connectors-tools.helper.js';
+import { fetchConnectors } from '../../connector/connectors-tools.helper.js';
 import { getSubaccountConnectorsHealthSummary, getConnectorIssueSolution, getAllCriticalConnectors } from './pmc-connectors-tools.helper.js';
 import type { ToolHandlers, ToolMetadata } from '../../tools.interfaces.js';
 import { getValidatedPmcToolArguments } from '../helpers/pmc-tool.helper.js';
 import { PmcCustomerRequestBaseSchema } from '../schemas/pmc-base.schemas.js';
 import { PmcConnectorIssueSolutionSchema } from '../schemas/pmc-connectors.schema.js';
+import type { IConnector } from '../../../api/api-types/connectors-api.js';
 
 type PmcConnectorsToolResponse = Record<'connectors', IConnector[]>;
 
@@ -29,7 +30,7 @@ export const PMC_CONNECTORS_TOOLS_HANDLER: ToolHandlers = {
             const { customer_guid } = getValidatedPmcToolArguments(request.params, PmcCustomerRequestBaseSchema);
             const customerAuthConfig = resolveCustomerAuthConfig(customer_guid, authConfig);
 
-            const { success, messages, result: connectors } = await getConnectors(customerAuthConfig);
+            const { success, messages, result: { connectors } } = await fetchConnectors(customerAuthConfig);
 
             const metadata: ToolMetadata = {
                 tool: 'pmc_get_subaccount_connectors',

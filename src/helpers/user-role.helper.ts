@@ -1,4 +1,4 @@
-import type { IAuthConfig } from './auth-config.helper';
+import type { IAuthConfig } from './auth-config.helper.js';
 
 export const findUserToken = (tokens: IAuthTokenShort[], keepitLogin: string): IAuthTokenShort => {
     const foundToken = tokens.find(token => token.aname === keepitLogin);

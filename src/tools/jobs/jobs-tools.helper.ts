@@ -1,56 +1,34 @@
-import { getJobs, getJobsHistory } from '../../api/jobs-api.js';
-import { JobHistorySchema } from '../../utils/schemas/requests/job.schemas.js';
+import {
+    getAggregatedJobsCountSettings,
+    getJobs,
+    getJobsCountSettings,
+    getJobsHistory
+} from '../../api/jobs-api.js';
+import type {
+    AggregatedJobsCountSchema,
+    JobHistorySchema,
+    JobsCountSchema
+} from '../../utils/schemas/requests/job.schemas.js';
 import { logger } from '../../logger/logger.js';
 import { makeRequest } from '../../helpers/make-request.helper.js';
 import { subtractPeriod, TIME_IN_MS } from '../../helpers/date.helper.js';
-import { validateAndSanitizeConnectorId } from '../../utils/sanitizers/connector-id.sanitizer.js';
 import type { IAuthConfig } from '../../helpers/auth-config.helper.js';
 import type { IJob, JobsResponse } from '../../api/api-types/jobs-api.js';
-import type { ToolArguments, ToolParams, ToolResult } from '../tools.interfaces.js';
 import type { z } from 'zod';
 
 type JobHistoryRequest = z.infer<typeof JobHistorySchema>;
+type JobsCountRequest = z.infer<typeof JobsCountSchema>;
+type AggregatedJobsCountRequest = z.infer<typeof AggregatedJobsCountSchema>;
 
-export const getValidatedJobArguments = (toolParams: ToolParams): JobHistoryRequest => {
-    const requestArguments = {
-        guid: toolParams.arguments?.guid,
-        duration: toolParams.arguments?.duration
-    };
-
-    return validateJobRequest(requestArguments);
-};
-
-const validateJobRequest = (request: ToolArguments): JobHistoryRequest => {
-    const validationResult = JobHistorySchema.safeParse(request);
-
-    if (!validationResult.success) {
-        const errorMessages = validationResult.error.issues.map(issue => {
-            const path = issue.path.length > 0 ? `${issue.path.join('.')}: ` : '';
-            return `${path}${issue.message}`;
-        }).join('; ');
-        throw new Error(`Invalid configuration: ${errorMessages}`);
-    }
-
-    const {
-        guid,
-        duration: lookbackDuration
-    } = validationResult.data;
-
-    return {
-        guid: validateAndSanitizeConnectorId(guid),
-        duration: lookbackDuration
-    };
-};
-
-export const getJobsList = async (connectorGuid: string, authConfig: IAuthConfig): Promise<ToolResult<IJob[]>> => {
+export const getJobsList = async (authConfig: IAuthConfig, params: { guid: string; }) => {
     try {
-        const { requestConfig, applyDataCallback } = getJobs(authConfig.keepitGuid, connectorGuid, true);
+        const { requestConfig, applyDataCallback } = getJobs(authConfig.keepitGuid, params.guid, true);
         const jobs = await makeRequest<IJob[]>(requestConfig, authConfig, applyDataCallback);
 
         return {
-            result: jobs,
+            result: { jobs },
             success: true,
-            messages: [`Found ${jobs.length} jobs for ${connectorGuid} connector`]
+            messages: [`Found ${jobs.length} jobs for ${params.guid} connector`]
         };
     } catch (error) {
         logger.error('[JOBS] Failed to get jobs for connector}', error);
@@ -58,7 +36,7 @@ export const getJobsList = async (connectorGuid: string, authConfig: IAuthConfig
     }
 };
 
-export const handleGetJobHistory = async (request: JobHistoryRequest, authConfig: IAuthConfig): Promise<ToolResult<IJob[]>> => {
+export const handleGetJobHistory = async (authConfig: IAuthConfig, request: JobHistoryRequest) => {
     try {
         const endTimeNow = new Date();
         const endTimeISO = endTimeNow.toISOString();
@@ -71,7 +49,7 @@ export const handleGetJobHistory = async (request: JobHistoryRequest, authConfig
         const startTimeISO = startTime.toISOString();
 
         const loadChunkDuration = 24;
-        const allResults: IJob[] = [];
+        const jobs: IJob[] = [];
         let baseResponse: JobsResponse | null = null;
 
         const totalHours = (new Date(endTimeISO).getTime() - new Date(startTimeISO).getTime()) / TIME_IN_MS.HOUR;
@@ -98,18 +76,63 @@ export const handleGetJobHistory = async (request: JobHistoryRequest, authConfig
             }
 
             if (Array.isArray(chunkResponse.result)) {
-                allResults.push(...chunkResponse.result);
+                jobs.push(...chunkResponse.result);
             }
         }
 
         return {
             ...baseResponse,
-            result: allResults,
+            result: { jobs },
             success: true,
-            messages: [`Found ${allResults.length} jobs in history for ${request.guid} connector from ${startTimeISO} to ${endTimeISO}`]
+            messages: [`Found ${jobs.length} jobs in history for ${request.guid} connector from ${startTimeISO} to ${endTimeISO}`],
+            jobCount: jobs.length
         };
     } catch (error) {
         logger.error('[JOBS] Failed to get jobs}', error);
+        throw error;
+    }
+};
+
+export const getJobsCount = async (authConfig: IAuthConfig, request: JobsCountRequest) => {
+    try {
+        const {
+            guid: deviceId,
+            ...restParams
+        } = request;
+
+        const { requestConfig, applyDataCallback } = getJobsCountSettings(
+            authConfig.keepitGuid,
+            deviceId,
+            restParams
+        );
+        const jobsCountData = await makeRequest(requestConfig, authConfig, applyDataCallback);
+
+        return {
+            result: { ...jobsCountData },
+            success: true,
+            messages: ['Retrieved jobs count data']
+        };
+    } catch (error) {
+        logger.error('[JOBS] Failed to get jobs count: ', error);
+        throw error;
+    }
+};
+
+export const getAggregatedJobsCount = async (authConfig: IAuthConfig, requestParams: AggregatedJobsCountRequest) => {
+    try {
+        const { requestConfig, applyDataCallback } = getAggregatedJobsCountSettings(
+            authConfig.keepitGuid,
+            requestParams
+        );
+        const jobsCountData = await makeRequest(requestConfig, authConfig, applyDataCallback);
+
+        return {
+            result: { ...jobsCountData },
+            success: true,
+            messages: ['Retrieved aggregated jobs count data']
+        };
+    } catch (error) {
+        logger.error('[JOBS] Failed to get aggregated jobs count: ', error);
         throw error;
     }
 };

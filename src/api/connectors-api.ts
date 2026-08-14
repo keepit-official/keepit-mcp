@@ -1,12 +1,21 @@
 import { getHeaders } from '../helpers/make-request.helper.js';
-import { logger } from '../logger/logger.js';
-import { normalizeArrayResponse } from '../helpers/fetch.helper.js';
+import { getURLSearchParamsString, normalizeArrayResponse } from '../helpers/fetch.helper.js';
 import { XMLParser } from 'fast-xml-parser';
-import xmlParseOptions from './fast-xml-parser-options.js';
+import xmlParseOptions from '../helpers/fast-xml-parser-options.js';
+import type {
+    IDevice,
+    IDeviceStatus,
+    IAggregatedHealthResponse,
+    IAggregatedRsiSummaryParams,
+    IAggregatedConnectorsHealthParams,
+    IConnectorHealthParams,
+    ICriticalDeviceAttributeMap,
+    TCriticalDeviceNode
+} from './api-types/connectors-api.js';
 
 const Parser = new XMLParser(xmlParseOptions);
 
-export const getConnectorsSettings = (userId: string, connectorType: string = 'cloud') => {
+export const getConnectors = (userId: string, connectorType: string = 'cloud') => {
     const requestConfig = {
         url: `/users/${userId}/devices`,
         headers: getHeaders('v4')
@@ -15,71 +24,118 @@ export const getConnectorsSettings = (userId: string, connectorType: string = 'c
         const jsonData = Parser.parse(response);
         const deviceKey = connectorType;
 
-        if (!jsonData.devices?.[deviceKey]) {
-            return [];
-        }
-
         const devicesArray = normalizeArrayResponse(jsonData.devices[deviceKey]);
 
         return devicesArray
-            .filter((device: IDevice) => device.accessible !== false)
+            .filter((device: IDevice) => device.accessible)
             .map((device: IDevice) => {
-                if (!device.guid || !device.name) {
-                    logger.info('[CONNECTORS] Device missing required fields:', device);
-                    return null;
-                }
-
-                const finalType: TCloudType = device.type === 'dsl' && device['agent-type']
-                    ? device['agent-type'] as TCloudType
-                    : device.type;
 
                 return {
                     guid: device.guid,
                     name: device.name.substring(0, 200), // Limit name length
                     created: device.created || '',
                     orglink: device.orglink || undefined,
-                    type: finalType,
+                    type: device.type,
                     ...device['backup-retention'] ? { backup_retention: device['backup-retention'] } : {},
                     ...device['backup-retention-updated'] ? { retention_updated: device['backup-retention-updated'] } : {}
                 };
-            })
-            .filter((device): device is NonNullable<typeof device> => Boolean(device)); // Type-safe filter
+            });
     };
 
     return { requestConfig, applyDataCallback };
 };
 
-export const getConnectorHealthSettings = (userId: string, connectorGUID: string) => {
+export const getConnectorHealth = (userId: string, connectorGUID: string, params?: IConnectorHealthParams) => {
     const requestConfig = {
-        url: `/users/${userId}/devices/${connectorGUID}/health`,
+        url: `/users/${userId}/devices/${connectorGUID}/health${getURLSearchParamsString(params)}`,
+        headers: {
+            'Content-Type': 'application/xml'
+        }
+    };
+
+    const applyDataCallback = (response: string) => Parser.parse(response)?.devhealth;
+
+    return { requestConfig, applyDataCallback };
+};
+
+export const getAggregatedConnectorsHealthSettings = (userId: string, params: IAggregatedConnectorsHealthParams) => {
+    const requestConfig = {
+        url: `/users/${userId}/devices/health${getURLSearchParamsString(params)}`,
         headers: {
             'Content-Type': 'application/xml'
         }
     };
 
     const applyDataCallback = (response: string) => {
-        const jsonData = Parser.parse(response);
+        const jsonData = Parser.parse(response)?.devhealth?.device;
 
-        const healthStatus = jsonData?.devhealth?.health
-            ? normalizeArrayResponse(jsonData.devhealth.health)[0]
-            : normalizeArrayResponse(jsonData?.health)[0];
-
-        if (!healthStatus) {
-            logger.error('[CONNECTOR_HEALTH] Health status not found in response:', jsonData);
-            throw new Error('Health status not found in the response');
+        if (!jsonData) {
+            throw new Error('Aggregated connectors health data not found in the response');
         }
 
-        const validStatuses = ['healthy', 'unhealthy', 'critical'];
-        const normalizedStatus = String(healthStatus).toLowerCase();
-        if (!validStatuses.includes(normalizedStatus)) {
-            logger.info(`[CONNECTOR_HEALTH] Unexpected health status: ${healthStatus}`);
-            return 'unknown';
-        }
-
-        return normalizedStatus;
+        const normalizedArray: IAggregatedHealthResponse[] = normalizeArrayResponse(jsonData);
+        return normalizedArray;
     };
 
     return { requestConfig, applyDataCallback };
+};
+
+export const getConnectorRsiSummarySettings = (userId: string, deviceId: string) => {
+    const requestConfig = {
+        url: `/users/${userId}/devices/${deviceId}/rsi`,
+        headers: {
+            'Content-Type': 'application/xml'
+        }
+    };
+
+    const applyDataCallback = (response: string) => {
+        const jsonData = Parser.parse(response).recurrently_skipped_items;
+
+        if (!jsonData) {
+            throw new Error('Recurrently skipped items not found in the response');
+        }
+
+        const normalizedResponse = {
+            failedFiles: Number(jsonData.rfailed_files),
+            failedFolders: Number(jsonData.rfailed_folders)
+        };
+
+        return normalizedResponse;
+    };
+
+    return {
+        requestConfig,
+        applyDataCallback
+    };
+};
+
+export const getAggregatedRsiSummarySettings = (userId: string, params?: IAggregatedRsiSummaryParams) => {
+    const requestConfig = {
+        url: `/users/${userId}/rsi${getURLSearchParamsString(params)}`,
+        headers: {
+            'Content-Type': 'application/xml'
+        }
+    };
+
+    const applyDataCallback = (response: string) => {
+        const jsonData = Parser.parse(response).recurrently_skipped_items;
+
+        if (!jsonData) {
+            throw new Error('Aggregated recurrently skipped items not found in the response');
+        }
+
+        const normalizedResponse = {
+            failedFiles: Number(jsonData.rfailed_files),
+            failedFolders: Number(jsonData.rfailed_folders)
+        };
+
+        return normalizedResponse;
+    };
+
+    return {
+        requestConfig,
+        applyDataCallback
+    };
 };
 
 export const getCriticalConnectorsSettings = (userId: string) => {

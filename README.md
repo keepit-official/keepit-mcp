@@ -88,6 +88,9 @@ This project can be used for:
 **Note:** Before proceeding, make sure the project is properly installed (see the [Installation](#installation) section).
 
 ### Create MCPB package
+**Note:** You can skip this step entirely by downloading the pre-built keepit-mcp.mcpb file from the [Releases](https://github.com/keepit-official/keepit-mcp/releases).
+
+If you want to generate the package manually from the source code:
 - Open the project folder:
   ```bash
   cd keepit-mcp

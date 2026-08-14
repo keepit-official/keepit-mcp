@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-import type { TEnvType } from './environments.helper';
+import type { TEnvType } from './environments.helper.js';
 import { getUserId, getUserRole } from '../tools/account/account-tools.helper.js';
 import { logger } from '../logger/logger.js';
 import { Base64 } from 'js-base64';
@@ -35,7 +35,8 @@ export const setupAuthConfig = async () => {
         };
 
         authConfig.keepitGuid = await getUserId(authConfig);
-        authConfig.userRole = await getUserRole(authConfig);
+        const userRole = await getUserRole(authConfig);
+        authConfig.userRole = userRole.split(':')[0];
 
         // Check for required environment variables
         const { keepitLogin, keepitPass, keepitEnv, keepitGuid } = authConfig;

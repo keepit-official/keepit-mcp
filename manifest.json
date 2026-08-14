@@ -2,14 +2,21 @@
   "manifest_version": "0.3",
   "name": "keepit-mcp-server",
   "display_name": "Keepit MCP Server",
-  "version": "1.1.0",
-  "description": "A MCP extension (MCPB) that brings Keepit's backup capabilities directly into your workspace — for both Keepit customers managing their own account and partners managing multiple customer accounts through the Partner Management Console (PMC).",
-  "long_description": "**Keepit Extension**\nThis extension provides a Model Context Protocol (MCP) server for interacting with the Keepit REST API. It supports two usage modes: individual Keepit customers managing their own account, and partners managing multiple customer accounts through the Keepit Partner Management Console (PMC).\n\n**What's Available Now (Read-Only)**\n* **View Backup Jobs**: Check status, history, and details of backup operations across all workloads\n* **Browse Snapshots**: Explore available backup snapshots and their contents\n* **Monitor Connectors**: View health status and configuration of backup connectors for each service\n* **Partner Account Management** *(PMC)*: List and inspect all managed customer accounts\n* **Partner Connector Monitoring** *(PMC)*: View critical connectors and health summaries across all customer accounts, with links to resolution guides\n* **Partner Seat Usage** *(PMC)*: Track seat allocation, usage history, and limit violations across customer accounts\n* **Partner Audit Logs** *(PMC)*: Review audit log activity across all managed accounts or for a specific customer\n\n**What's Coming Later**\n* **Backup Management**: Schedule and configure backup jobs\n* **Restore Operations**: Perform restores with granular control over what gets restored\n* **Anomaly Detection**: Get alerts on backup issues and irregularities\n\n**Configuration**\nThe extension requires Keepit API credentials which can be configured through user settings.",
+  "version": "1.2.0",
+  "description": "Monitor Keepit backups, search snapshots and download items. For individual accounts and partners managing many customers.",
+  "long_description": "**New in 1.2**\n• **Aggregated Reporting**: Connector health, recurrently skipped items (RSI), backup coverage history, backup summaries and job counts, per connector or aggregated across all connectors\n• **Search Items**: Find backed-up files, folders and emails inside a snapshot by keyword, date range or file type\n• **Version History**: List every snapshot where a file or folder changed, to track edits or recover an earlier version\n• **Downloads**: Generate a URL to download a single item, or multiple items packed into a ZIP archive\n\n**For Keepit customers**\n• **Backup Jobs**: Status, history and details of backup operations across all workloads\n• **Snapshots**: Browse the latest snapshot or a date range, and compare backup versions\n• **Connectors**: Health status and configuration of backup connectors for each service\n• **Account and Audit Logs**: Account details and audit log history\n\n**For partners (PMC)**\n• **Account Management**: List and inspect all managed customer accounts\n• **Connector Monitoring**: Critical connectors and health summaries across all customer accounts, with links to resolution guides\n• **Seat Usage**: Seat allocation, usage history and limit violations across customer accounts\n• **Audit Logs**: Audit activity across all managed accounts or for a specific customer",
   "author": {
     "name": "Keepit A/S",
     "url": "https://www.keepit.com"
   },
-  "keywords": ["backup", "keepit", "microsoft-365", "sharepoint", "salesforce", "azure-devops"],
+  "keywords": [
+    "backup",
+    "keepit",
+    "microsoft-365",
+    "sharepoint",
+    "salesforce",
+    "azure-devops"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -40,7 +47,19 @@
     },
     {
       "name": "get_connector_health",
-      "description": "Get the health status of a connector. You can provide either the connector GUID or the connector name (full or partial). "
+      "description": "Get the health status of a connector. You can provide either the connector GUID or the connector name (full or partial)."
+    },
+    {
+      "name": "get_aggregated_connector_health",
+      "description": "Retrieve aggregated health statuses and reasons across connectors."
+    },
+    {
+      "name": "get_connector_rsi_summary",
+      "description": "Get recurrently skipped items (RSI) counts of a connector."
+    },
+    {
+      "name": "get_aggregated_rsi_summary",
+      "description": "Get aggregated recurrently skipped items (RSI) counts across all connectors."
     },
     {
       "name": "get_active_jobs",
@@ -65,6 +84,46 @@
     {
       "name": "get_snapshot_range",
       "description": "Get a list of snapshots for a connector within a given time range"
+    },
+    {
+      "name": "get_backup_coverage_history",
+      "description": "Get the specific connector snapshot coverage history for a set period of time."
+    },
+    {
+      "name": "get_aggregated_backup_coverage_history",
+      "description": "Get aggregated backup coverage history of defined connector (device) type for a set period of time for all connectors."
+    },
+    {
+      "name": "get_backup_summary",
+      "description": "Get the specific connector backup summary (latest snapshot) data."
+    },
+    {
+      "name": "get_aggregated_backup_summary",
+      "description": "Retrieve aggregated backup summary data across all connectors."
+    },
+    {
+      "name": "get_jobs_count",
+      "description": "Get list of jobs count for a single connector, by connector name or GUID. Jobs count is a part of 'Recovery insights'."
+    },
+    {
+      "name": "get_aggregated_jobs_count",
+      "description": "Get aggregated jobs count per connector over a time window - this is the 'Recovery insights' data source. Aggregated means 'jobs count for all connectors'."
+    },
+    {
+      "name": "search_snapshot_data",
+      "description": "Search items in the snapshot by search terms"
+    },
+    {
+      "name": "get_item_versions_history",
+      "description": "Get a list of all the file versions (snapshots where this file was changed) within a given date range"
+    },
+    {
+      "name": "get_download_item_url",
+      "description": "Get the valid url to download item"
+    },
+    {
+      "name": "get_download_zip_url",
+      "description": "Get the valid url to download several items as zip archive"
     },
     {
       "name": "pmc_get_my_account_info",

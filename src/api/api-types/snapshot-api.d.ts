@@ -1,6 +1,5 @@
 export interface IDeviceSnapshot {
     account?: string;
-    root?: string;
     size: string;
     tstamp: string;
     type: 'p' | 'c';

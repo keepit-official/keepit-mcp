@@ -2,11 +2,10 @@ import { generateXmlBody } from '../helpers/xml-helper.js';
 import { getHeaders } from '../helpers/make-request.helper.js';
 import { logger } from '../logger/logger.js';
 import { normalizeArrayResponse } from '../helpers/fetch.helper.js';
-import { sanitizeIPAddress } from '../utils/sanitizers/ip-address.sanitizer.js';
 import { XMLParser } from 'fast-xml-parser';
 import type { IHeaderResponse, IMakeRequestHeaderParams } from '../helpers/interfaces/make-request.interface.js';
 import type { ToolPaginationParams, ToolResult } from '../tools/tools.interfaces.js';
-import xmlParseOptions from './fast-xml-parser-options.js';
+import xmlParseOptions from '../helpers/fast-xml-parser-options.js';
 
 const Parser = new XMLParser(xmlParseOptions);
 
@@ -68,7 +67,7 @@ export const getAuditLogHistorySettings = (body: IAuditLogBody, paginationParams
                     acc.push({
                         ...record,
                         token: maskSensitiveToken(record.token),
-                        'client-ip': sanitizeIPAddress(record['client-ip'])
+                        'client-ip': record['client-ip']
                     });
                 }
                 return acc;
@@ -94,7 +93,8 @@ export const getAuditLogHistorySettings = (body: IAuditLogBody, paginationParams
             messages: [
                 `Retrieved ${totalRecords} audit log records`,
                 nextOffset ? `Use nextOffset ${nextOffset} to fetch more records` : 'No more records available'
-            ]
+            ],
+            recordCount: processedRecords.length
         };
     };
 

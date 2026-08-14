@@ -5,7 +5,7 @@ import { normalizeArrayResponse } from '../helpers/fetch.helper.js';
 import { XMLParser } from 'fast-xml-parser';
 import type { IDeviceSnapshot, IGetDeviceRangeBody } from './api-types/snapshot-api.js';
 import type { IMakeRequestBaseParams } from '../helpers/interfaces/make-request.interface.js';
-import xmlParseOptions from './fast-xml-parser-options.js';
+import xmlParseOptions from '../helpers/fast-xml-parser-options.js';
 
 const Parser = new XMLParser(xmlParseOptions);
 
@@ -19,13 +19,14 @@ export const getLatestSnapshot = (userId: string, deviceId: string) => {
 
         if (!parsed) return null;
 
-        if (parsed?.history?.backup) return parsed.history.backup;
-        if (parsed?.root?.history?.backup) return parsed.root.history.backup;
-        if (parsed?.backup) return parsed.backup;
-        if (parsed?.root?.backup) return parsed.root.backup;
-        if (parsed?.snapshots?.snapshot) return parsed.snapshots.snapshot;
+        const snapshot = parsed.history?.backup;
 
-        return null;
+        return {
+            account: snapshot.account,
+            size: snapshot.size,
+            tstamp: snapshot.tstamp,
+            type: snapshot.type
+        };
     };
 
     return { requestConfig, applyDataCallback };
@@ -48,16 +49,12 @@ export const getSnapshotRange = (
     const applyDataCallback = (response: string) => {
         const parsed = Parser.parse(response);
 
-        let snapshots: IDeviceSnapshot[] = [];
-        if (parsed?.history?.backup) {
-            snapshots = normalizeArrayResponse(parsed.history.backup);
-        } else if (parsed?.root?.history?.backup) {
-            snapshots = normalizeArrayResponse(parsed.root.history.backup);
-        } else if (parsed?.backup) {
-            snapshots = normalizeArrayResponse(parsed.backup);
-        } else if (parsed?.root?.backup) {
-            snapshots = normalizeArrayResponse(parsed.root.backup);
-        }
+        const snapshots: IDeviceSnapshot[] = normalizeArrayResponse(
+            parsed?.history?.backup
+            || parsed?.root?.history?.backup
+            || parsed?.backup
+            || parsed?.root?.backup
+        );
 
         // Validate and sanitize snapshot data
         const result = snapshots.map((snapshot) => {

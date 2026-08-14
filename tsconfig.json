@@ -1,11 +1,12 @@
 {
     "compilerOptions": {
-        "target": "ES2022",
-        "module": "esnext",
-        "moduleResolution": "Node",
+        "target": "es2022",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
         "outDir": "./build",
-        "rootDir": "src",
+        "rootDir": "./src",
         "strict": true,
+        "types": ["node"],
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "skipLibCheck": true,

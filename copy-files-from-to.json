@@ -17,6 +17,10 @@
             "to": "export/package.json"
         },
         {
+            "from": "package-lock.json",
+            "to": "export/package-lock.json"
+        },
+        {
             "from": "PROMPTS.md",
             "to": "export/PROMPTS.md"
         },

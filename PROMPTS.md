@@ -181,7 +181,5 @@ Focus on: Disaster recovery simulation, business impact analysis, recovery strat
 ### **Data Protection Officers**
 Focus on: Data discovery, backup verification, privacy compliance, data lifecycle management
 
-### **MSP/Service Providers**
-Focus on: Multi-tenant operations, automated workflows, cost optimization, service level monitoring
 ### **Partners (PMC)**
 Focus on: Multi-account monitoring, critical connector triage, seat limit management, cross-account audit review

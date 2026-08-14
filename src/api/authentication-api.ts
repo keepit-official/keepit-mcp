@@ -1,5 +1,5 @@
 import { XMLParser } from 'fast-xml-parser';
-import xmlParseOptions from '../api/fast-xml-parser-options.js';
+import xmlParseOptions from '../helpers/fast-xml-parser-options.js';
 import { normalizeArrayResponse } from '../helpers/fetch.helper.js';
 import type { IMakeRequestBaseParams } from '../helpers/interfaces/make-request.interface.js';
 

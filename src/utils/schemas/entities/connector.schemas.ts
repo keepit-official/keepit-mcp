@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CONNECTOR_TYPES } from '../../../tools/connector/connectors-tools-definitions.js';
 
 // Keepit uses a different GUID format: 6-6-6 characters (e.g., 0m34mt-wny3i2-o5fjvo)
 // This is different from standard UUID format: 8-4-4-4-12 characters
@@ -8,3 +9,5 @@ export const ConnectorGuidSchema = z.string()
         /^[0-9a-z]{6}-[0-9a-z]{6}-[0-9a-z]{6}$/i,
         'Invalid Keepit connector GUID format (expected: xxxxxx-xxxxxx-xxxxxx)'
     );
+
+export const ConnectorTypeSchema = z.enum([...CONNECTOR_TYPES]);

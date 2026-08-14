@@ -14,12 +14,9 @@ export/
 
 # Ignore logs
 *.log
-build/*.log
 
 # Ignore temporary files
 *.tmp
-tmp/
-temp/
 
 # Ignore IDE and editor files
 .idea/
