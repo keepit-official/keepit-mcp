@@ -62,6 +62,17 @@ export const getJobsHistory = (
     return { requestConfig, applyDataCallback };
 };
 
+const normalizeJobsCountTypes = (jobs: IDeviceJobsStatutesCountObject[]) => jobs
+    .map(job => ({
+        ...job,
+        scheduled: +job.scheduled,
+        'in-progress': +job['in-progress'],
+        cancelled: +job.cancelled,
+        successful: +job.successful,
+        incomplete: +job.incomplete,
+        unsuccessful: +job.unsuccessful
+    }));
+
 export const getJobsCountSettings = (
     userId: string,
     deviceId: string,
@@ -85,7 +96,7 @@ export const getJobsCountSettings = (
         const normalizedResponse = normalizeArrayResponse<IDeviceJobsStatutesCountObject>(jsonData['jobs-count']['job-type']);
 
         return {
-            'jobs-count': normalizedResponse
+            'jobs-count': normalizeJobsCountTypes(normalizedResponse)
         };
     };
 
@@ -116,7 +127,9 @@ export const getAggregatedJobsCountSettings = (
         return {
             'jobs-count': normalizedJobsCountData.map(jobsCountDevice => ({
                 ...jobsCountDevice,
-                counts: normalizeArrayResponse(jobsCountDevice.counts['job-type'])
+                counts: normalizeJobsCountTypes(
+                    normalizeArrayResponse(jobsCountDevice.counts['job-type'])
+                )
             }))
         };
     };

@@ -205,20 +205,20 @@ interface IDeviceJobsStatutesCount {
 
 interface IDeviceJobsStatutesCountResponse {
     'jobs-count': {
-        'job-type': IDeviceJobsStatutesCountObject | IDeviceJobsStatutesCountObject[];
+        'job-type': IDeviceJobsStatutesCountObject[];
     };
 }
 
 interface IWorkloadSingleDeviceJobsStatutesResponse {
     'guid': string;
     'counts': {
-        'job-type': IDeviceJobsStatutesCountObject | IDeviceJobsStatutesCountObject[];
+        'job-type': IDeviceJobsStatutesCountObject[];
     };
 }
 
 interface IWorkloadJobsStatutesCountResponse {
     'jobs-count': {
-        'device': IWorkloadSingleDeviceJobsStatutesResponse | IWorkloadSingleDeviceJobsStatutesResponse[];
+        'device': IWorkloadSingleDeviceJobsStatutesResponse[];
     };
 }
 
@@ -237,7 +237,7 @@ interface IDeviceSuccessfulJobsCountObject {
 
 interface IGetWorkloadSuccessfulJobsCount {
     'jobs-count': {
-        device: IDeviceSuccessfulJobsCountObject | IDeviceSuccessfulJobsCountObject[];
+        device: IDeviceSuccessfulJobsCountObject[];
     };
 }
 

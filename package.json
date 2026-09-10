@@ -1,6 +1,6 @@
 {
   "name": "keepit-mcp",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Keepit-MCP is a Model Context Protocol (MCP) server for the Keepit REST API.",
   "license": "MIT",
   "author": "Keepit",

@@ -58,7 +58,7 @@ const PMC_GET_AUDIT_LOG_HISTORY_TOOL: Tool = {
                         token: { type: 'string', description: 'Token or user that triggered the event' },
                         company: { type: 'string', description: 'Company associated with the event' },
                         device: { type: 'string', description: 'Device associated with the event, if present' },
-                        allowed: { type: 'string', description: 'Whether the action was allowed' },
+                        allowed: { type: 'boolean', description: 'Whether the action was allowed' },
                         succeeded: { type: 'string', description: 'Whether the action completed successfully' },
                         'client-ip': { type: 'string', description: 'Client IP address associated with the event' },
                         method: { type: 'string', description: 'HTTP or audit method used for the event' },
@@ -68,16 +68,10 @@ const PMC_GET_AUDIT_LOG_HISTORY_TOOL: Tool = {
                             items: {
                                 type: 'object',
                                 properties: {
-                                    parameter: {
-                                        type: 'object',
-                                        properties: {
-                                            key: { type: 'string', description: 'Parameter name or identifier' },
-                                            value: { type: 'string', description: 'Parameter value' }
-                                        },
-                                        required: ['key', 'value']
-                                    }
+                                    key: { type: 'string', description: 'Parameter name or identifier' },
+                                    value: { type: 'string', description: 'Parameter value' }
                                 },
-                                required: ['parameter']
+                                required: ['key', 'value']
                             }
                         }
                     },
@@ -104,7 +98,7 @@ const PMC_GET_AUDIT_LOG_HISTORY_TOOL: Tool = {
                                     token: { type: 'string', description: 'Token or user that triggered the event' },
                                     company: { type: 'string', description: 'Company associated with the event' },
                                     device: { type: 'string', description: 'Device associated with the event, if present' },
-                                    allowed: { type: 'string', description: 'Whether the action was allowed' },
+                                    allowed: { type: 'boolean', description: 'Whether the action was allowed' },
                                     succeeded: { type: 'string', description: 'Whether the action completed successfully' },
                                     'client-ip': { type: 'string', description: 'Client IP address associated with the event' },
                                     method: { type: 'string', description: 'HTTP or audit method used for the event' },
@@ -114,16 +108,10 @@ const PMC_GET_AUDIT_LOG_HISTORY_TOOL: Tool = {
                                         items: {
                                             type: 'object',
                                             properties: {
-                                                parameter: {
-                                                    type: 'object',
-                                                    properties: {
-                                                        key: { type: 'string', description: 'Parameter name or identifier' },
-                                                        value: { type: 'string', description: 'Parameter value' }
-                                                    },
-                                                    required: ['key', 'value']
-                                                }
+                                                key: { type: 'string', description: 'Parameter name or identifier' },
+                                                value: { type: 'string', description: 'Parameter value' }
                                             },
-                                            required: ['parameter']
+                                            required: ['key', 'value']
                                         }
                                     }
                                 },

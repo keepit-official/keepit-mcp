@@ -81,7 +81,7 @@ const GET_KEEPIT_CLOUD_CONNECTORS_TOOL: Tool = {
                             description: 'When the retention policy was last updated (in ISO 8601 standard)'
                         }
                     },
-                    required: ['guid', 'name', 'created', 'orglink', 'type']
+                    required: ['guid', 'name', 'created', 'type']
                 },
                 description: 'List of backup connectors in the account'
             }

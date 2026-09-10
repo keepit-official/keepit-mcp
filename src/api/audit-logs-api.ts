@@ -67,7 +67,11 @@ export const getAuditLogHistorySettings = (body: IAuditLogBody, paginationParams
                     acc.push({
                         ...record,
                         token: maskSensitiveToken(record.token),
-                        'client-ip': record['client-ip']
+                        'client-ip': record['client-ip'],
+                        ...record.metadata && {
+                            // @ts-expect-error this is the part of the normalization response
+                            metadata: normalizeArrayResponse(record.metadata?.parameter)
+                        }
                     });
                 }
                 return acc;

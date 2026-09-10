@@ -176,7 +176,7 @@ const mapResources = (resourcesRaw: IMaxUsageResourceRaw[]): ISeatAllocationItem
             return {
                 connectorType: resourceToConnectorMap[raw.name] ?? raw.name,
                 connector: resourceToConnectorMap[raw.name] ? connectorDisplayNames[resourceToConnectorMap[raw.name]] ?? null : null,
-                'max-usage': raw['maximum-usage']
+                'max-usage': +raw['maximum-usage']
             };
         });
 

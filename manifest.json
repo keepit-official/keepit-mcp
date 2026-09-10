@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "keepit-mcp-server",
   "display_name": "Keepit MCP Server",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Monitor Keepit backups, search snapshots and download items. For individual accounts and partners managing many customers.",
   "long_description": "**New in 1.2**\n• **Aggregated Reporting**: Connector health, recurrently skipped items (RSI), backup coverage history, backup summaries and job counts, per connector or aggregated across all connectors\n• **Search Items**: Find backed-up files, folders and emails inside a snapshot by keyword, date range or file type\n• **Version History**: List every snapshot where a file or folder changed, to track edits or recover an earlier version\n• **Downloads**: Generate a URL to download a single item, or multiple items packed into a ZIP archive\n\n**For Keepit customers**\n• **Backup Jobs**: Status, history and details of backup operations across all workloads\n• **Snapshots**: Browse the latest snapshot or a date range, and compare backup versions\n• **Connectors**: Health status and configuration of backup connectors for each service\n• **Account and Audit Logs**: Account details and audit log history\n\n**For partners (PMC)**\n• **Account Management**: List and inspect all managed customer accounts\n• **Connector Monitoring**: Critical connectors and health summaries across all customer accounts, with links to resolution guides\n• **Seat Usage**: Seat allocation, usage history and limit violations across customer accounts\n• **Audit Logs**: Audit activity across all managed accounts or for a specific customer",
   "author": {

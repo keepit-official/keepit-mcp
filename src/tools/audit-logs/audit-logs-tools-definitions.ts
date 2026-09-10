@@ -91,28 +91,22 @@ const GET_KEEPIT_AUDIT_LOG_HISTORY = {
                             items: {
                                 type: 'object',
                                 properties: {
-                                    parameter: {
-                                        type: 'object',
-                                        properties: {
-                                            key: {
-                                                type: 'string',
-                                                description: 'Parameter name or identifier'
-                                            },
-                                            value: {
-                                                type: 'string',
-                                                description: 'Parameter value'
-                                            }
-                                        },
-                                        required: ['key', 'value'],
-                                        description: 'Key-value pair representing a metadata parameter'
+                                    key: {
+                                        type: 'string',
+                                        description: 'Parameter name or identifier'
+                                    },
+                                    value: {
+                                        type: 'string',
+                                        description: 'Parameter value'
                                     }
                                 },
-                                required: ['parameter']
+                                required: ['key', 'value'],
+                                description: 'Key-value pair representing a metadata parameter'
                             },
                             description: 'List of metadata parameters'
                         }
                     },
-                    required: ['client-ip', 'acl', 'allowed', 'method', 'message', 'succeeded', 'metadata', 'time', 'token']
+                    required: ['client-ip', 'acl', 'allowed', 'method', 'message', 'succeeded', 'time', 'token']
                 },
                 description: 'List of audit log records for the specified time period'
             },
@@ -124,7 +118,7 @@ const GET_KEEPIT_AUDIT_LOG_HISTORY = {
                         description: 'Indicates if more records are available beyond the current response'
                     },
                     nextOffset: {
-                        type: 'string',
+                        type: 'integer',
                         description: 'Offset value to be used for fetching the next page of results'
                     },
                     totalInResponse: {

@@ -143,14 +143,29 @@ If the list is empty, say "No connectors found for this account."`,
                             type: 'string',
                             description: 'Connector type (o365-admin, gsuite, etc.)'
                         },
+                        orglink: {
+                            type: 'string',
+                            description: 'GUID of the organization this connector belongs to'
+                        },
+                        retention_updated: {
+                            type: 'string',
+                            format: 'date-time',
+                            description: 'Date and time when the retention policy was last updated'
+                        },
                         lastBackupAt: {
                             type: 'string',
                             description: 'Date and time of the last successful backup. Empty if no backup has completed yet.'
                         },
                         healthStatus: {
-                            type: 'string',
-                            enum: ['healthy', 'unhealthy', 'critical', 'unknown'],
-                            description: 'Current health status of the connector'
+                            type: 'object',
+                            properties: {
+                                health: {
+                                    type: 'string',
+                                    enum: ['healthy', 'unhealthy', 'critical', 'unknown'],
+                                    description: 'Current health status of the connector'
+                                }
+                            },
+                            required: ['health']
                         },
                         failureReason: {
                             type: 'string',
@@ -170,7 +185,7 @@ const PMC_GET_CONNECTOR_ISSUE_SOLUTION_TOOL: Tool = {
     title: 'Get connector issue solution',
     description: `Returns the current health status of a specific connector. When the connector is not healthy, also provides a failure explanation and a link to a resolution guide. Use connector_guid and connector_type from the health summary results.
 
-Present the result as a brief status block: show healthStatus as the headline status. If the connector is not healthy, show failureReason on the next line, then solutionUrl as a hyperlink labelled "View resolution guide".`,
+Present the result as a brief status block: show healthStatus.health as the headline status. If the connector is not healthy, show failureReason on the next line, then solutionUrl as a hyperlink labelled "View resolution guide".`,
     inputSchema: {
         type: 'object',
         properties: {
@@ -194,9 +209,15 @@ Present the result as a brief status block: show healthStatus as the headline st
         type: 'object',
         properties: {
             healthStatus: {
-                type: 'string',
-                enum: ['healthy', 'unhealthy', 'critical', 'unknown'],
-                description: 'Current health status of the connector'
+                type: 'object',
+                properties: {
+                    health: {
+                        type: 'string',
+                        enum: ['healthy', 'unhealthy', 'critical', 'unknown'],
+                        description: 'Current health status of the connector'
+                    }
+                },
+                required: ['health']
             },
             failureReason: {
                 type: 'string',

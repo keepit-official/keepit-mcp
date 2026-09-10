@@ -10,33 +10,35 @@ const GET_MY_ACCOUNT_INFO_TOOL = {
     },
     outputSchema: {
         type: 'object',
-        account: {
-            type: 'object',
-            properties: {
-                id: {
-                    type: 'string',
-                    description: 'Unique identifier of the user account'
-                },
-                enabled: {
-                    type: 'boolean',
-                    description: 'Whether the account is currently active'
-                },
-                created: {
-                    type: 'string',
-                    format: 'date-time',
-                    description: 'ISO 8601 timestamp when the account was created'
-                },
-                product: {
-                    type: 'string',
-                    description: 'Product GUID associated with this account'
-                },
-                parent: {
-                    type: 'string',
-                    description: 'Parent account GUID'
-                },
-                subscribed: {
-                    type: 'boolean',
-                    description: 'Whether the account is subscribed'
+        properties: {
+            account: {
+                type: 'object',
+                properties: {
+                    id: {
+                        type: 'string',
+                        description: 'Unique identifier of the user account'
+                    },
+                    enabled: {
+                        type: 'boolean',
+                        description: 'Whether the account is currently active'
+                    },
+                    created: {
+                        type: 'string',
+                        format: 'date-time',
+                        description: 'ISO 8601 timestamp when the account was created'
+                    },
+                    product: {
+                        type: 'string',
+                        description: 'Product GUID associated with this account'
+                    },
+                    parent: {
+                        type: 'string',
+                        description: 'Parent account GUID'
+                    },
+                    subscribed: {
+                        type: 'boolean',
+                        description: 'Whether the account is subscribed'
+                    }
                 }
             }
         },

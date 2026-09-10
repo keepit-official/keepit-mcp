@@ -103,9 +103,10 @@ const GET_DEVICE_COVERAGE_HISTORY_TOOL: Tool = {
                                         description: 'Points for the graph each containing the data for axes.',
                                         items: {
                                             type: 'array',
+                                            description: 'Array of point values. Order matches the order of corresponding dataset axes.',
                                             items: {
-                                                type: 'array',
-                                                description: 'Array of point values. Order matches the order of corresponding dataset axes.'
+                                                type: ['string', 'number'],
+                                                description: 'A single axis value (string for timestamps, string or number for numeric values).'
                                             }
                                         }
                                     }
@@ -224,9 +225,10 @@ const GET_AGGREGATED_COVERAGE_HISTORY_TOOL: Tool = {
                                         description: 'Points for the graph each containing the data for axes.',
                                         items: {
                                             type: 'array',
+                                            description: 'Array of point values. Order matches the order of corresponding dataset axes.',
                                             items: {
-                                                type: 'array',
-                                                description: 'Array of point values. Order matches the order of corresponding dataset axes.'
+                                                type: ['string', 'number'],
+                                                description: 'A single axis value (string for timestamps, string or number for numeric values).'
                                             }
                                         }
                                     }
